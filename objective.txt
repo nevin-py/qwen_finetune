@@ -1,0 +1,1020 @@
+You are the lead ML engineer responsible for designing and implementing this entire project.
+
+## PROJECT
+
+Build a serious, portfolio-grade **Text-to-SQL Fine-Tuning, Execution-Based Verification, and Repair System**.
+
+The goal is NOT to build another SQL chatbot.
+
+The goal is to experimentally answer:
+
+> Can a small open-source language model be fine-tuned for text-to-SQL, and can execution-based verification and automatic repair improve its end-to-end correctness?
+
+The final project should demonstrate:
+
+* ML/data engineering
+* LLM fine-tuning
+* QLoRA/LoRA
+* reproducible experiments
+* benchmark evaluation
+* SQL parsing and validation
+* database execution
+* execution-based correctness
+* automatic error analysis
+* iterative SQL repair
+* inference/deployment
+* resource-aware ML engineering
+
+The project must be feasible on approximately:
+
+* NVIDIA RTX 3050 Laptop
+* 4 GB VRAM
+* 16 GB system RAM
+
+Do NOT design a system requiring large GPUs.
+
+---
+
+# 1. IMPORTANT: DESIGN BEFORE IMPLEMENTATION
+
+Before writing substantial code:
+
+1. Inspect the repository.
+2. Produce a concise architecture/design document.
+3. Identify the exact datasets, licenses, formats, model candidates, libraries, GPU constraints, and evaluation methodology.
+4. Check the official sources for Spider, SParC, and BIRD rather than relying on remembered dataset details.
+5. Determine what can legally/technically be downloaded automatically and what requires manual download.
+6. Decide on the smallest viable model that can realistically be fine-tuned on 4 GB VRAM.
+7. Define the experiment matrix.
+8. Define the directory structure.
+9. Define reproducibility requirements.
+10. Only then begin implementation.
+
+Do not over-engineer the project before establishing a working baseline.
+
+---
+
+# 2. DATASETS
+
+Use these three datasets as the primary datasets:
+
+## Spider
+
+Use Spider as the primary supervised text-to-SQL dataset.
+
+Use it for:
+
+* training
+* validation/development
+* standard text-to-SQL evaluation
+* schema generalization
+
+Preserve the official database/schema structure.
+
+Do NOT randomly merge databases between train and test in a way that invalidates the benchmark.
+
+---
+
+## SParC
+
+Use SParC for conversational/multi-turn text-to-SQL experiments.
+
+This can initially be optional.
+
+Do not allow SParC to unnecessarily complicate the first working version.
+
+First get single-turn Spider → model → SQL → verification working.
+
+Then add SParC as an extension if the architecture supports it cleanly.
+
+---
+
+## BIRD
+
+Use BIRD as the primary difficult held-out benchmark.
+
+The model must NOT train on the BIRD evaluation data.
+
+Use the official benchmark/evaluation methodology where possible.
+
+BIRD should represent the project's external/generalization test.
+
+Do not contaminate BIRD evaluation through training, synthetic augmentation, prompt examples, or hyperparameter tuning against the test set.
+
+If a public development split is available, use that for development and reserve the official test evaluation appropriately.
+
+---
+
+# 3. DATA PIPELINE
+
+Create a reproducible data pipeline.
+
+The pipeline should:
+
+1. Download or ingest datasets.
+2. Validate their structure.
+3. Normalize them into a common internal representation.
+4. Preserve:
+
+   * natural-language question
+   * database identifier
+   * schema
+   * SQL
+   * conversation context where applicable
+   * expected database/result information when available
+5. Create train/validation/test manifests.
+6. Record dataset versions/hashes where practical.
+
+Do NOT silently modify benchmark data.
+
+Create a dataset manifest containing:
+
+* dataset name
+* version/source
+* download location
+* license
+* number of examples
+* number of databases
+* split
+* preprocessing performed
+* filtering performed
+
+---
+
+# 4. INTERNAL DATA FORMAT
+
+Create a canonical representation similar to:
+
+{
+"id": "...",
+"dataset": "spider",
+"database_id": "...",
+"question": "...",
+"conversation_context": null,
+"schema": "...",
+"gold_sql": "...",
+"split": "train"
+}
+
+For SParC, conversation context should be represented explicitly.
+
+Do not throw away schema information.
+
+---
+
+# 5. BASELINE FIRST
+
+Before fine-tuning anything, build a working baseline.
+
+Choose a small open-source instruction/code model that can realistically run under the hardware constraints.
+
+Candidates may include appropriate small Qwen/Gemma/other open-source models, but verify current availability, license, VRAM requirements, and Hugging Face compatibility before choosing.
+
+Prefer approximately 1B–3B parameters if practical.
+
+The model selection should be justified by:
+
+* parameter count
+* context length
+* tokenizer
+* SQL/code capability
+* quantization support
+* license
+* expected VRAM
+* training feasibility on 4 GB VRAM
+
+The baseline must support:
+
+INPUT:
+
+Natural language question + database schema
+
+OUTPUT:
+
+SQL
+
+Measure:
+
+* generation latency
+* memory/VRAM usage where possible
+* syntactic validity
+* execution validity
+* execution accuracy
+
+Do not fine-tune before this baseline works.
+
+---
+
+# 6. PROMPT FORMAT
+
+Use a consistent prompt format.
+
+For example:
+
+Schema: <database schema>
+
+Question: <question>
+
+Generate only the SQL query.
+
+The exact format can be changed after experimentation, but it must be deterministic and version-controlled.
+
+Create a configurable prompt template rather than hardcoding it throughout the codebase.
+
+---
+
+# 7. FINE-TUNING
+
+Implement parameter-efficient fine-tuning.
+
+Primary method:
+
+* QLoRA or LoRA
+
+Do NOT attempt full fine-tuning on the available hardware.
+
+Use:
+
+* 4-bit quantization where appropriate
+* gradient accumulation
+* gradient checkpointing where useful
+* mixed precision where supported
+* small batch sizes
+* configurable sequence length
+
+The training configuration must be reproducible.
+
+Every experiment should record:
+
+* model
+* dataset
+* learning rate
+* batch size
+* effective batch size
+* epochs/steps
+* LoRA rank
+* LoRA alpha
+* LoRA dropout
+* quantization configuration
+* sequence length
+* random seed
+* training time
+* peak VRAM if measurable
+* resulting checkpoint
+
+---
+
+# 8. EXPERIMENT MATRIX
+
+Do not randomly experiment.
+
+Create a small controlled experiment matrix.
+
+At minimum:
+
+### Experiment A
+
+Base model with prompting.
+
+### Experiment B
+
+Base model + LoRA/QLoRA fine-tuning.
+
+### Experiment C
+
+Fine-tuned model + execution-based verification.
+
+### Experiment D
+
+Fine-tuned model + verification + automatic repair.
+
+The purpose is to isolate the contribution of each component.
+
+Do not claim verification improves generation itself.
+
+Measure whether it improves the final end-to-end result.
+
+---
+
+# 9. SQL VERIFIER
+
+This is the central engineering component.
+
+Build a verifier that receives:
+
+* generated SQL
+* database/schema
+* optionally the original question
+* gold SQL/results when available for evaluation
+
+It should perform multiple checks.
+
+## Layer 1 — SQL parsing
+
+Determine whether the SQL is syntactically valid.
+
+Use a proper SQL parser rather than regex wherever possible.
+
+---
+
+## Layer 2 — Schema validation
+
+Check:
+
+* table existence
+* column existence
+* obvious invalid references
+* aliases
+* basic type/structure issues where practical
+
+---
+
+## Layer 3 — Safety validation
+
+The system should operate in a read-only environment.
+
+Reject or prevent:
+
+* DROP
+* DELETE
+* UPDATE
+* INSERT
+* ALTER
+* TRUNCATE
+* CREATE
+* destructive operations
+
+Do not rely solely on the model behaving correctly.
+
+Use database-level permissions/sandboxing as an additional safety boundary.
+
+---
+
+## Layer 4 — Execution
+
+Execute candidate SQL against the benchmark database.
+
+Use:
+
+* read-only database users where possible
+* query timeouts
+* resource limits
+* transaction rollback/isolation
+* controlled database copies for evaluation
+
+Never execute arbitrary generated SQL against a valuable production database.
+
+---
+
+## Layer 5 — Result comparison
+
+For benchmark evaluation, compare the candidate's execution result with the expected result according to the benchmark's established methodology.
+
+Handle carefully:
+
+* row ordering
+* NULLs
+* numeric precision
+* duplicate rows
+* column ordering
+* database-specific semantics
+
+Do NOT simply compare raw strings.
+
+---
+
+# 10. IMPORTANT: GOLD SQL ≠ ONLY CORRECT SQL
+
+The verifier must understand that two different SQL queries can produce the same correct result.
+
+Therefore:
+
+DO NOT define correctness solely as:
+
+candidate SQL == gold SQL
+
+Use execution-based correctness wherever the benchmark methodology permits it.
+
+You may still report exact/structural SQL matching as a secondary diagnostic metric.
+
+---
+
+# 11. AUTOMATIC REPAIR
+
+Implement a repair loop.
+
+Example:
+
+Question
+↓
+Model
+↓
+Candidate SQL
+↓
+Verifier
+↓
+Failure
+↓
+Error information
+↓
+Model repair
+↓
+Candidate SQL v2
+↓
+Verifier
+↓
+Success / failure
+
+Limit repair attempts, e.g. 1–3.
+
+Do not create an infinite agent loop.
+
+The repair prompt should contain only useful information, such as:
+
+* SQL error
+* relevant schema information
+* original question
+* previous SQL
+
+Avoid blindly dumping huge database contents into the model.
+
+---
+
+# 12. REPAIR EXPERIMENT
+
+Measure:
+
+### Generation only
+
+How often does the model generate correct SQL?
+
+### Generation + verification
+
+How often can the system detect incorrect SQL?
+
+### Generation + verification + repair
+
+How often can the system recover from incorrect SQL?
+
+Report all three separately.
+
+The verifier must not magically receive the gold SQL during real inference.
+
+Gold SQL/result information may only be used by the evaluation harness to determine whether the system was correct.
+
+This distinction is critical.
+
+---
+
+# 13. ERROR TAXONOMY
+
+Build automatic error categorization.
+
+At minimum classify failures into:
+
+* syntax error
+* nonexistent table
+* nonexistent column
+* incorrect join
+* incorrect filtering
+* incorrect aggregation
+* incorrect GROUP BY
+* incorrect HAVING
+* incorrect ordering
+* incorrect LIMIT
+* incorrect nested query
+* incorrect subquery
+* incorrect date handling
+* incorrect NULL handling
+* semantic mismatch
+* timeout
+* unsafe query
+* other
+
+Where automatic classification is unreliable, mark the result as unknown rather than inventing a category.
+
+Generate an error analysis report.
+
+---
+
+# 14. BENCHMARKING
+
+Your primary final benchmark should be BIRD.
+
+Also evaluate on Spider.
+
+SParC can be used for a separate conversational experiment.
+
+Report metrics separately.
+
+Do NOT merge all datasets into one meaningless score.
+
+At minimum report:
+
+### Spider
+
+* exact/official metric where applicable
+* execution accuracy
+* syntax validity
+* execution success rate
+
+### BIRD
+
+Use the official benchmark evaluation methodology where possible.
+
+Report:
+
+* official/benchmark-compatible metric
+* execution accuracy if applicable
+* valid SQL rate
+* repair recovery rate
+* latency
+
+### SParC
+
+Report conversational/multi-turn metrics appropriate to the dataset.
+
+---
+
+# 15. REQUIRED ABLATION
+
+Perform an ablation that demonstrates whether the verifier actually matters.
+
+For example:
+
+| System                         | Execution Accuracy |
+| ------------------------------ | -----------------: |
+| Base model                     |           measured |
+| Fine-tuned model               |           measured |
+| Fine-tuned + verifier          |           measured |
+| Fine-tuned + verifier + repair |           measured |
+
+These numbers must be produced by actual experiments.
+
+Never invent placeholder performance numbers in the final report.
+
+---
+
+# 16. RESOURCE BENCHMARKING
+
+Because the project is intended to demonstrate ML engineering under constraints, measure:
+
+* GPU VRAM
+* system RAM
+* training time
+* inference latency
+* tokens/sec where practical
+* model/checkpoint size
+* quantized model size
+
+Compare configurations if feasible.
+
+For example:
+
+* FP16 baseline if possible
+* 4-bit inference
+* LoRA/QLoRA
+
+Do not sacrifice correctness just to produce lots of benchmark numbers.
+
+---
+
+# 17. OPTIONAL SYNTHETIC DATA
+
+DO NOT build a huge synthetic-data system initially.
+
+First make Spider/SParC/BIRD work.
+
+Only add synthetic data if experiments show a clear data deficiency.
+
+If synthetic data is later added, generate examples programmatically from:
+
+schema
+→ database instance
+→ SQL query
+→ execute SQL
+→ expected result
+→ natural-language question
+
+Synthetic examples must be automatically validated.
+
+Potential use:
+
+* increase representation of complex joins
+* nested queries
+* window functions
+* difficult aggregations
+* edge cases
+* verifier failure cases
+
+Synthetic data should NOT replace external benchmark evaluation.
+
+---
+
+# 18. DATABASE MANAGEMENT
+
+The project needs a reproducible way to provision benchmark databases.
+
+Create scripts/configuration for:
+
+* database creation
+* schema loading
+* data loading
+* read-only evaluation user
+* cleanup
+* reset
+
+Avoid manually configuring every database.
+
+Use SQLite where the benchmark itself requires SQLite, and use the appropriate DB engine for benchmarks that require another engine.
+
+Do not silently translate SQL between database engines unless that is explicitly part of the experiment.
+
+---
+
+# 19. PROJECT ARCHITECTURE
+
+Use a clean structure along these lines, adapting it if your research/design phase finds a better structure:
+
+project/
+│
+├── README.md
+├── pyproject.toml
+├── configs/
+│   ├── data/
+│   ├── training/
+│   ├── evaluation/
+│   └── models/
+│
+├── data/
+│   ├── raw/
+│   ├── processed/
+│   └── manifests/
+│
+├── src/
+│   ├── data/
+│   ├── models/
+│   ├── training/
+│   ├── inference/
+│   ├── sql/
+│   │   ├── parser/
+│   │   ├── validator/
+│   │   ├── executor/
+│   │   └── comparator/
+│   ├── verification/
+│   ├── repair/
+│   ├── evaluation/
+│   └── utils/
+│
+├── scripts/
+│   ├── download_data.py
+│   ├── prepare_data.py
+│   ├── train.py
+│   ├── evaluate.py
+│   ├── run_benchmark.py
+│   └── provision_databases.py
+│
+├── experiments/
+│   ├── configs/
+│   ├── results/
+│   └── reports/
+│
+├── tests/
+│
+└── docs/
+├── architecture.md
+├── experiments.md
+├── evaluation.md
+└── limitations.md
+
+Adapt this structure when appropriate. Do not create unnecessary abstractions.
+
+---
+
+# 20. TESTING
+
+Write tests for:
+
+* SQL parsing
+* schema validation
+* unsafe SQL rejection
+* database execution
+* result comparison
+* timeout handling
+* repair loop
+* dataset conversion
+* prompt formatting
+* evaluation metrics
+
+Include integration tests using small toy databases.
+
+Example:
+
+Question:
+"Which employees earn more than 100000?"
+
+Generated SQL:
+SELECT ...
+
+The test should verify that:
+
+1. SQL is accepted.
+2. SQL executes.
+3. Correct result is detected.
+
+Also test deliberately incorrect SQL.
+
+---
+
+# 21. REPRODUCIBILITY
+
+A new user should be able to:
+
+1. clone repository
+2. install dependencies
+3. download permitted datasets
+4. prepare data
+5. provision databases
+6. run baseline
+7. train model
+8. run evaluation
+9. generate reports
+
+with documented commands.
+
+Use configuration files rather than hardcoded paths.
+
+Set random seeds where applicable.
+
+Record package/model/dataset versions.
+
+---
+
+# 22. RESULTS
+
+Automatically save experiment results in machine-readable form.
+
+For example:
+
+results/
+spider/
+bird/
+sparc/
+ablations/
+resource_usage/
+
+Use JSON/CSV/JSONL as appropriate.
+
+Also produce human-readable Markdown reports.
+
+Each experiment should have:
+
+* configuration
+* model
+* dataset
+* metrics
+* runtime
+* resource usage
+* failure counts
+* error categories
+
+---
+
+# 23. VISUALIZATIONS
+
+Generate a small number of useful plots:
+
+1. Execution accuracy by experiment.
+2. Error category distribution.
+3. Repair recovery rate.
+4. Accuracy vs inference latency if meaningful.
+5. VRAM/resource comparison if meaningful.
+
+Do not generate meaningless dashboards.
+
+---
+
+# 24. README
+
+The README should explain:
+
+## Problem
+
+Why text-to-SQL is difficult.
+
+## Research question
+
+Whether fine-tuning + execution verification + repair improves end-to-end correctness.
+
+## Architecture
+
+Include a clear system diagram.
+
+## Datasets
+
+Explain Spider, SParC, and BIRD and their roles.
+
+## Training
+
+Explain LoRA/QLoRA and hardware constraints.
+
+## Evaluation
+
+Explain why execution-based evaluation is important.
+
+## Results
+
+Show actual measured results.
+
+## Error analysis
+
+Show representative failure categories.
+
+## Limitations
+
+Be honest about:
+
+* benchmark limitations
+* synthetic data limitations if used
+* model size
+* database engine differences
+* execution-equivalence limitations
+* benchmark contamination risk
+* GPU constraints
+
+## Reproduction
+
+Give exact commands.
+
+---
+
+# 25. IMPORTANT RESEARCH INTEGRITY RULES
+
+Never:
+
+* invent benchmark scores
+* report estimates as measurements
+* train on evaluation/test data
+* tune directly against BIRD test results
+* claim semantic correctness from string matching alone
+* claim the verifier improves the model unless the experiment demonstrates it
+* hide failed experiments
+* artificially remove difficult examples to inflate accuracy
+* use benchmark answers as model prompts during evaluation
+
+Clearly distinguish:
+
+* training data
+* validation data
+* test data
+* development experiments
+* final benchmark
+
+---
+
+# 26. DEVELOPMENT ORDER
+
+Implement in this order:
+
+### Phase 0 — Research/design
+
+Architecture + dataset audit + model selection.
+
+### Phase 1 — Data
+
+Spider ingestion + canonical representation.
+
+### Phase 2 — Database execution
+
+Load a small Spider database and prove candidate SQL can be executed safely.
+
+### Phase 3 — Baseline
+
+Run a small number of Spider examples through the base model.
+
+### Phase 4 — Evaluation harness
+
+Implement syntax + execution + result evaluation.
+
+### Phase 5 — Fine-tuning
+
+Implement QLoRA/LoRA.
+
+### Phase 6 — Fine-tuned baseline
+
+Evaluate on Spider.
+
+### Phase 7 — Verification
+
+Implement verifier.
+
+### Phase 8 — Repair
+
+Implement bounded repair loop.
+
+### Phase 9 — SParC
+
+Add conversational evaluation if the architecture supports it cleanly.
+
+### Phase 10 — BIRD
+
+Run final held-out evaluation.
+
+### Phase 11 — Ablations/error analysis
+
+Produce the final scientific comparison.
+
+### Phase 12 — Documentation
+
+README + architecture + experiments + limitations.
+
+---
+
+# 27. DEFINITION OF DONE
+
+The project is complete only when it can demonstrate the following pipeline:
+
+Natural-language question
+↓
+Database schema
+↓
+Fine-tuned small LLM
+↓
+Candidate SQL
+↓
+SQL parser
+↓
+Schema/safety validation
+↓
+Sandboxed execution
+↓
+Result verification
+↓
+Optional repair
+↓
+Final SQL/result
+
+AND the repository contains reproducible experiments showing:
+
+1. Base model performance.
+2. Fine-tuned model performance.
+3. Fine-tuned + verifier performance.
+4. Fine-tuned + verifier + repair performance.
+5. Spider evaluation.
+6. BIRD evaluation.
+7. Error analysis.
+8. Resource measurements.
+9. Tests.
+10. Reproduction instructions.
+
+---
+
+# 28. SCOPE CONTROL
+
+This is extremely important.
+
+Do NOT turn this into:
+
+* a chatbot UI
+* a multi-agent framework
+* a RAG system
+* a massive orchestration framework
+* an unnecessarily complex web application
+* a cloud infrastructure project
+
+The ML experiment and evaluation harness are the product.
+
+A minimal FastAPI inference endpoint can be added after the core research pipeline works, but it is secondary.
+
+Prioritize:
+
+DATA → MODEL → EVALUATION → VERIFICATION → REPAIR → ANALYSIS
+
+over UI and infrastructure.
+
+---
+
+# FINAL INSTRUCTION
+
+Act as an experienced ML engineer/research engineer.
+
+Before implementation, inspect the current repository and produce the design/implementation plan.
+
+Then implement incrementally.
+
+After each major phase:
+
+* run tests
+* verify assumptions
+* record results
+* fix problems before proceeding
+
+Prefer simple, reproducible implementations over abstractions.
+
+If a design choice is uncertain, investigate the official dataset/model/library documentation and choose the approach that is easiest to reproduce and defend technically.
+
+The final result should look like a **small ML research/engineering project**, not a tutorial and not another LLM wrapper.
+
+The most important final question the project should answer is:
+
+> **How much does fine-tuning improve text-to-SQL, and how much additional correctness can be recovered through execution-based verification and bounded SQL repair?**

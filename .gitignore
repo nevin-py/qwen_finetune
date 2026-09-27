@@ -1,0 +1,21 @@
+# environments
+.venv/
+
+# datasets (downloaded, large, licensed — never committed)
+data/
+*.sqlite
+*.db
+
+# model artifacts & run outputs
+experiments/
+reports/plots/*.png
+*.pt
+*.bin
+*.safetensors
+
+# caches
+__pycache__/
+*.pyc
+.pytest_cache/
+.hf_cache/
+.tmp/
