@@ -15,7 +15,7 @@ Measured by Execution Accuracy on **Spider dev (held-out)**, confirmed once on *
 |---|---|---|
 | A | base model + prompt | zero-shot baseline |
 | B | A + QLoRA adapter | fine-tuning delta |
-| B2 *(optional)* | 3B base + QLoRA adapter | model-scale delta (gated by VRAM spike test) |
+| B2 | ~~3B QLoRA~~ **rejected by Phase 5 spike** | OOM at seq 1024 *and* 768 *and* 512 (even with gradient checkpointing): 4-bit 3B + 152k-vocab embeddings/logits exceed the 3.68 GiB usable VRAM. Recorded in `scripts/spike_3b.py`; scale question instead answered via inference-only 3B-vs-1.5B comparison (no training) if time permits. |
 | C | B + verifier (filter/rank) | verification delta |
 | D | C + bounded repair loop | repair delta |
 
@@ -91,8 +91,9 @@ committed.
 
 Precision policy (measured): 4-bit 1.5B inference peaks at **1.34 GiB**, bf16 at
 **2.89 GiB** (fits, probed). We keep **uniform 4-bit for every inference cell** so the
-A↔B delta cannot be confounded by precision, and so B2 (3B: impossible in bf16) stays
-comparable.
+A↔B delta cannot be confounded by precision, and so comparability holds across cells.
+Spike verdict (Phase 5): **3B QLoRA rejected** — OOM at seq 1024/768/512 with
+checkpointing; usable VRAM is 3.68 GiB (display-reserved total is 4.0).
 
 ## 6. Architecture & data flow
 

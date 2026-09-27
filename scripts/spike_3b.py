@@ -9,13 +9,14 @@ quality, so no data or gold SQL is involved.
 from __future__ import annotations
 
 import gc
+import sys
 
 import torch
 from peft import LoraConfig, get_peft_model
 from transformers import AutoModelForCausalLM, BitsAndBytesConfig
 
 MODEL = "Qwen/Qwen2.5-Coder-3B-Instruct"
-SEQ_LEN = 1024
+SEQ_LEN = int(sys.argv[1]) if len(sys.argv) > 1 else 1024
 HEADROOM_GIB = 3.85
 
 
@@ -42,6 +43,10 @@ def main() -> None:
     )
     model = get_peft_model(model, lora)
     model.print_trainable_parameters()
+    # production training shape uses gradient checkpointing (design §7)
+    model.gradient_checkpointing_enable()
+    model.enable_input_require_grads()
+    model.config.use_cache = False
 
     vocab = model.config.vocab_size
     torch.manual_seed(0)
