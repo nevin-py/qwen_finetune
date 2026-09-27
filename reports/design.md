@@ -98,9 +98,11 @@ datasets ──► prompts (schema serialization + template) ──► inference
 ```
 
 - `src/sandbox` — read-only SQLite executor: read-only URI + file permissions +
-  `authorizer` hook (deny ATTACH/PRAGMA writes/DROP/DDL), execution timeout, row/output
-  caps, per-run temp DB when writes must be tested (never on gold DB), error taxonomy
-  (syntax / no such table / no such column / ambiguous / type / timeout / resource).
+  `authorizer` allowlist (SELECT/READ/FUNCTION only — DDL/DML/PRAGMA/ATTACH denied),
+  execution timeout via progress handler, row/output caps, error taxonomy
+  (syntax / no_such_table / no_such_column / ambiguous / no_such_function / forbidden /
+  timeout / operational). Writes are never needed: candidates are judged by SELECT
+  results only, so no temp-DB staging exists (rule 5: no unnecessary code).
 - `src/prompts` — single schema serializer (tables/columns/PK-FK, optionally sample rows)
   + one template module (few-shot variant is content, not code branches).
 - `src/inference` — model loading (base vs base+adapter), generation, SQL extraction.
