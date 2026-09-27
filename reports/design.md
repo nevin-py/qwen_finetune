@@ -25,15 +25,28 @@ All cells archived under `experiments/<cell>/` (adapter + config + seed + predic
 
 | Dataset | Role | Source (verified) | Size | License |
 |---|---|---|---|---|
-| Spider train (8,420) | training (+ carve validation) | official: Google Drive link on yale-lily.github.io/spider; HF mirror `xlangai/spider` for auto-download | small | CC BY-SA 4.0 |
+| Spider train (7,000, `train_spider.json`) | training (+ carve validation) | official: Google Drive link on yale-lily.github.io/spider (gdown, verified) | small | CC BY-SA 4.0 |
 | **Spider dev (1,034)** | **final single-turn test (locked)** | same | small | CC BY-SA 4.0 |
-| SParC | multi-turn **evaluation only** (Option A) | official: Google Drive link on yale-lily.github.io/sparc; HF mirror candidates to verify in Phase 2 | small | CC BY-SA 4.0 |
-| **BIRD dev** | **final held-out benchmark (locked)** | direct: `https://bird-bench.oss-cn-beijing.aliyuncs.com/dev.zip` (HTTP 200, 346 MB) | 346 MB | research use |
+| SParC (3,034 train / 422 dev interactions) | multi-turn **evaluation only** (Option A) | official Google Drive zip via gdown (verified) | 99 MB zip | CC BY-SA 4.0 |
+| **BIRD dev (1,534 questions, 11 DBs)** | **final held-out benchmark (locked)** | direct: `https://bird-bench.oss-cn-beijing.aliyuncs.com/dev.zip` (verified, 346 MB) | 1.7 GB extracted | research use |
 | BIRD train | **not used** (8.9 GB) | — | — | — |
 
-Split protocol: official Spider **train** → 90/10 train/validation (validation used for all
-tuning, verifier thresholding, repair decisions). Official Spider **dev** and BIRD **dev**
-are touched exactly once each (Phases 9/10) — never during tuning.
+Source verification notes (Phase 0/2):
+- Spider zip ships `test.json` + `test_gold.sql` and `train_others.json` (1,659 non-Spider
+  questions) — **all excluded**: protocol uses `train_spider.json` for training and official
+  dev as the locked test. 166 DBs shipped; 160 used by train+dev.
+- HF mirror `aherntech/sparc` was **rejected**: correct counts (3,034/422) but flattened
+  turns with **no gold SQL**. Official zip is the only accepted SParC source.
+- SParC ships a byte-identical copy of Spider's 166 databases — deleted, spider's kept.
+- SParC schema: item = `{database_id, interaction: [turns], final: {query, utterance}}`;
+  96% of `final` turns duplicate the last interaction query (paraphrased utterance).
+- BIRD difficulty values are `simple/moderate/challenging` (not `challenge`); official
+  eval script is not shipped in `dev.zip` → our harness implements the official protocol.
+- Key naming: Spider/BIRD use `db_id`, SParC uses `database_id` (handled by `_db_id`).
+
+Split protocol: official Spider **train** (7,000) → 90/10 train/validation (validation used
+for all tuning, verifier thresholding, repair decisions). Official Spider **dev** and BIRD
+**dev** are touched exactly once each (Phases 9/10) — never during tuning.
 
 Google-Drive-only files (Spider, SParC): auto-download via HF mirrors where verified,
 `gdown` fallback with the official Drive IDs. If a mirror's content differs from official
