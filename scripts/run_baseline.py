@@ -31,6 +31,8 @@ def main() -> None:
     ap.add_argument("--max-new-tokens", type=int, default=256)
     ap.add_argument("--fp16", action="store_true",
                     help="load unquantized (needs VRAM headroom)")
+    ap.add_argument("--adapter", default=None,
+                    help="PEFT adapter dir (experiment B/C/D); default: base model")
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
 
@@ -42,8 +44,7 @@ def main() -> None:
     sample = [(i, items[i]) for i in idxs]
 
     out_path = Path(args.out) if args.out else \
-        ROOT / "reports" / f"baseline_{args.split}_n{len(sample)}.jsonl"
-    llm = LLM(args.model, quantize=not args.fp16)
+        ROOT / "reports" / f"baseline_{args.split}_n{len(sample)}.jsonl"    llm = LLM(args.model, quantize=not args.fp16, adapter=args.adapter)
     schema_cache: dict[str, str] = {}
     t_start = time.time()
     with out_path.open("w") as fh:

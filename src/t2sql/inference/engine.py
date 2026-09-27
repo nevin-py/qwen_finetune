@@ -30,9 +30,11 @@ def extract_sql(text: str) -> str:
 
 
 class LLM:
-    def __init__(self, model_id: str, *, quantize: bool = True) -> None:
+    def __init__(self, model_id: str, *, quantize: bool = True,
+                 adapter: str | None = None) -> None:
         self.model_id = model_id
         self.quantize = quantize
+        self.adapter = adapter
         self.tokenizer = AutoTokenizer.from_pretrained(model_id)
         kwargs: dict = {"device_map": "auto"}
         if quantize:
@@ -42,6 +44,10 @@ class LLM:
                 bnb_4bit_compute_dtype=torch.float16,
             )
         self.model = AutoModelForCausalLM.from_pretrained(model_id, **kwargs)
+        if adapter:
+            from peft import PeftModel
+
+            self.model = PeftModel.from_pretrained(self.model, adapter)
         self.model.eval()
 
     def generate(
