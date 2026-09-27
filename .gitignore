@@ -19,3 +19,7 @@ __pycache__/
 .pytest_cache/
 .hf_cache/
 .tmp/
+# build artifacts
+*.egg-info/
+build/
+dist/
