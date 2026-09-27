@@ -1,0 +1,10 @@
+{
+  "n": 20,
+  "scored": 20,
+  "skipped": 0,
+  "accuracy": 0.5,
+  "by_difficulty": {},
+  "pred_errors": {
+    "no_such_column": 4
+  }
+}

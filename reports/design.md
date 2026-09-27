@@ -55,11 +55,16 @@ files (checksum/schema check in Phase 2), fall back to Drive.
 ## 4. Evaluation protocol
 
 - **Primary metric: Execution Accuracy** — candidate SQL vs gold SQL executed on the same
-  SQLite DB, result-set equality (order-insensitive unless ORDER BY is semantically required;
-  official protocol rules applied for limit/column mismatch).
-- **Spider/SParC official cross-check:** `taoyds/test-suite-sql-eval` (official metric since
-  Oct 2020 = test-suite execution accuracy; original exact-set-match reported as reference).
-  Our harness must match it on a sample (Phase 5 gate).
+  SQLite DB, result-set equality under the **official protocol**, which our
+  `src/t2sql/eval/execution.py` ports faithfully: `postprocess`, `remove_distinct`
+  (sqlparse token filter), `> =` repairs, column-permutation search, multiset (bag)
+  equality, row order enforced iff gold contains `ORDER BY`, gold-failure → question
+  skipped, DISTINCT stripped *before execution* (bug-for-bug compatible).
+- **Official cross-check (M2, automated):** `tests/test_official_agreement.py` runs our
+  harness and the official `test-suite-sql-eval/exec_eval.py::eval_exec_match` on the
+  same predictions and asserts item-for-item agreement. Test-suite *neighbor* databases
+  (1.5 GB Drive download) are not needed for pairwise agreement — revisit only if we
+  want the stricter leaderboard test-suite accuracy (Phase 9 decision).
 - **BIRD official metrics:** executed accuracy + valid-SQL rate, computed with the official
   evaluation code shipped in `dev.zip` when available; our harness reproduces it otherwise.
 - **SParC (eval-only):** per-turn execution accuracy + query consistency/progress metrics
@@ -80,8 +85,14 @@ files (checksum/schema check in Phase 2), fall back to Drive.
 | `Qwen/Qwen2.5-Coder-3B-Instruct` | 3.09B | qwen-research | no | 3B spike test → optional B2; inference-only scale baseline |
 | `google/gemma-3-1b-it` | 1.0B | gemma (manual gate) | **yes** | rejected (gated) |
 
-Decision: **1.5B primary** (safe on 4 GB), **3B QLoRA spike test in Phase 5** (10 min:
-seq 1024, batch 1, grad-accum 4, checkpointing). If VRAM stable < ~3.9 GB → B2 committed.
+Decision: **1.5B primary** (safe on 4 GB), **3B QLoRA spike test in Phase 5** (seq 1024,
+batch 1, LoRA + AdamW step — `scripts/spike_3b.py`). If VRAM stable < 3.85 GiB → B2
+committed.
+
+Precision policy (measured): 4-bit 1.5B inference peaks at **1.34 GiB**, bf16 at
+**2.89 GiB** (fits, probed). We keep **uniform 4-bit for every inference cell** so the
+A↔B delta cannot be confounded by precision, and so B2 (3B: impossible in bf16) stays
+comparable.
 
 ## 6. Architecture & data flow
 
@@ -123,8 +134,11 @@ OOM-safe resume.
 
 ## 8. Dependencies (minimal, pinned)
 
-Runtime: `torch, transformers, peft, trl, bitsandbytes, accelerate, scikit-learn, pyyaml`
+Runtime: `torch, transformers, peft, trl, bitsandbytes, accelerate, scikit-learn, pyyaml,
+sqlparse`
 Dev: `pytest`  Conditional: `gdown` (only if Spider/SParC mirror check fails).
+Reasons for late additions: `sqlparse` = official `remove_distinct` fidelity (Phase 5),
+`peft`/`trl` = adapters + QLoRA training (Phases 5–6).
 Explicitly **not** used: HF `datasets` for training-set construction (built as plain JSON),
 `sqlglot` (stdlib `sqlite3` parses/executes), any web framework, any config framework.
 

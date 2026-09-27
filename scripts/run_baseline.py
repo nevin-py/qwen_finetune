@@ -38,7 +38,8 @@ def main() -> None:
     if not split_path.exists():  # official dev lives outside data/splits
         split_path = ROOT / "data" / "spider" / f"{args.split}.json"
     items = json.loads(split_path.read_text())
-    sample = random.Random(args.seed).sample(items, min(args.n, len(items)))
+    idxs = random.Random(args.seed).sample(range(len(items)), min(args.n, len(items)))
+    sample = [(i, items[i]) for i in idxs]
 
     out_path = Path(args.out) if args.out else \
         ROOT / "reports" / f"baseline_{args.split}_n{len(sample)}.jsonl"
@@ -46,22 +47,22 @@ def main() -> None:
     schema_cache: dict[str, str] = {}
     t_start = time.time()
     with out_path.open("w") as fh:
-        for i, item in enumerate(sample):
+        for i, (index, item) in enumerate(sample):
             db_id = item["db_id"]
             if db_id not in schema_cache:
                 db = ROOT / "data" / "spider" / "database" / db_id / f"{db_id}.sqlite"
                 schema_cache[db_id] = schema_text(db)
             messages = build_messages(item["question"], schema_cache[db_id])
             pred = extract_sql(llm.generate(messages, max_new_tokens=args.max_new_tokens))
-            # no gold in the output file: eval joins on (db_id, question)
-            fh.write(json.dumps({"db_id": db_id, "question": item["question"],
+            # no gold in the output file: eval joins on index and verifies the pair
+            fh.write(json.dumps({"index": index, "db_id": db_id,
+                                 "question": item["question"],
                                  "prediction": pred}) + "\n")
             print(f"[{i + 1}/{len(sample)}] {db_id}: {pred[:80]}", flush=True)
 
     peak = torch.cuda.max_memory_allocated() / 2**30 if torch.cuda.is_available() else 0
     print(f"wrote {out_path.relative_to(ROOT)} in {time.time() - t_start:.0f}s, "
           f"peak VRAM {peak:.2f} GiB")
-
 
 if __name__ == "__main__":
     main()
