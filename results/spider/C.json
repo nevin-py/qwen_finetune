@@ -1,0 +1,272 @@
+{
+  "cell": "C",
+  "dataset": "spider",
+  "n": 1034,
+  "scored": 1032,
+  "accuracy": 0.7035,
+  "accuracy_ci95": [
+    0.6744,
+    0.7306
+  ],
+  "exact_match": 0.5058,
+  "exec_valid_rate": 0.9496,
+  "pred_errors": {
+    "no_such_column": 49,
+    "operational": 3
+  },
+  "by_difficulty": {},
+  "failure_taxonomy": {
+    "multiple_clauses": 134,
+    "semantic_mismatch": 59,
+    "no_such_column": 49,
+    "filter": 26,
+    "group_by": 15,
+    "ordering": 7,
+    "join_condition": 7,
+    "agg": 4,
+    "operational": 3,
+    "having": 2
+  },
+  "taxonomy_examples": {
+    "semantic_mismatch": [
+      {
+        "index": 2,
+        "pred": "SELECT name ,  country ,  age FROM singer ORDER BY age DESC",
+        "gold": "SELECT name ,  country ,  age FROM singer ORDER BY age DESC",
+        "differs": []
+      },
+      {
+        "index": 3,
+        "pred": "SELECT name ,  country ,  age FROM singer ORDER BY age DESC",
+        "gold": "SELECT name ,  country ,  age FROM singer ORDER BY age DESC",
+        "differs": []
+      },
+      {
+        "index": 7,
+        "pred": "SELECT name ,  song_release_year FROM singer ORDER BY age LIMIT 1",
+        "gold": "SELECT song_name ,  song_release_year FROM singer ORDER BY age LIMIT 1",
+        "differs": []
+      }
+    ],
+    "multiple_clauses": [
+      {
+        "index": 6,
+        "pred": "SELECT T1.song_name ,  T1.song_release_year FROM singer AS T1 JOIN singer_in_concert AS T2 ON T1.singer_id  =  T2.singer_id ORDER BY T1.age LIMIT 1",
+        "gold": "SELECT song_name ,  song_release_year FROM singer ORDER BY age LIMIT 1",
+        "differs": [
+          "join_condition",
+          "ordering",
+          "tables"
+        ]
+      },
+      {
+        "index": 44,
+        "pred": "SELECT count(*) FROM concert AS T1 JOIN stadium AS T2 ON T1.stadium_id  =  T2.stadium_id ORDER BY capacity DESC LIMIT 1",
+        "gold": "select count(*) from concert where stadium_id = (select stadium_id from stadium order by capacity desc limit 1)",
+        "differs": [
+          "filter",
+          "join_condition",
+          "limit",
+          "subquery"
+        ]
+      },
+      {
+        "index": 53,
+        "pred": "SELECT count(*) FROM has_pet AS T1 JOIN pets AS T2 ON T1.petid  =  T2.petid JOIN student AS T3 ON T1.stuid  =  T3.stuid WHERE T3.sex  =  \"F\" AND T2.pettype  =  ",
+        "gold": "SELECT count(*) FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid JOIN pets AS T3 ON T2.petid  =  T3.petid WHERE T1.sex  =  'F' AND T3.pettype  =  ",
+        "differs": [
+          "filter",
+          "join_condition"
+        ]
+      }
+    ],
+    "agg": [
+      {
+        "index": 16,
+        "pred": "SELECT max(capacity) ,  avg(capacity) FROM stadium",
+        "gold": "select max(capacity), average from stadium",
+        "differs": [
+          "agg"
+        ]
+      },
+      {
+        "index": 439,
+        "pred": "SELECT max(loser_rank) FROM matches",
+        "gold": "SELECT min(loser_rank) FROM matches",
+        "differs": [
+          "agg"
+        ]
+      },
+      {
+        "index": 440,
+        "pred": "SELECT max(loser_rank) FROM matches",
+        "gold": "SELECT min(loser_rank) FROM matches",
+        "differs": [
+          "agg"
+        ]
+      }
+    ],
+    "group_by": [
+      {
+        "index": 24,
+        "pred": "SELECT T2.name ,  T2.capacity FROM concert AS T1 JOIN stadium AS T2 ON T1.stadium_id  =  T2.stadium_id WHERE T1.year  >=  2014 GROUP BY T1.stadium_id ORDER BY c",
+        "gold": "SELECT T2.name ,  T2.capacity FROM concert AS T1 JOIN stadium AS T2 ON T1.stadium_id  =  T2.stadium_id WHERE T1.year  >=  2014 GROUP BY T2.stadium_id ORDER BY c",
+        "differs": [
+          "group_by"
+        ]
+      },
+      {
+        "index": 25,
+        "pred": "SELECT t2.name ,  t2.capacity FROM concert AS t1 JOIN stadium AS t2 ON t1.stadium_id  =  t2.stadium_id WHERE t1.year  >  2013 GROUP BY t1.stadium_id ORDER BY co",
+        "gold": "select t2.name ,  t2.capacity from concert as t1 join stadium as t2 on t1.stadium_id  =  t2.stadium_id where t1.year  >  2013 group by t2.stadium_id order by co",
+        "differs": [
+          "group_by"
+        ]
+      },
+      {
+        "index": 231,
+        "pred": "SELECT T1.Abbreviation ,  T1.Country FROM airlines AS T1 JOIN flights AS T2 ON T1.uid  =  T2.Airline GROUP BY T1.Abbreviation ORDER BY count(*) LIMIT 1",
+        "gold": "SELECT T1.Abbreviation ,  T1.Country FROM AIRLINES AS T1 JOIN FLIGHTS AS T2 ON T1.uid  =  T2.Airline GROUP BY T1.Airline ORDER BY count(*) LIMIT 1",
+        "differs": [
+          "group_by"
+        ]
+      }
+    ],
+    "no_such_column": [
+      {
+        "index": 47,
+        "pred": "SELECT weight FROM pets WHERE pettype  =  \"dog\" AND petage  =  (SELECT min(petage) FROM pets WHERE pettype  =  \"dog\")",
+        "gold": "SELECT weight FROM pets ORDER BY pet_age LIMIT 1",
+        "differs": []
+      },
+      {
+        "index": 48,
+        "pred": "SELECT sum(weight) FROM pets WHERE pettype  =  \"dog\" AND age  =  (SELECT min(age) FROM pets WHERE pettype  =  \"dog\")",
+        "gold": "SELECT weight FROM pets ORDER BY pet_age LIMIT 1",
+        "differs": []
+      },
+      {
+        "index": 65,
+        "pred": "SELECT fname ,  age FROM Student WHERE StuID IN ( SELECT T1.StuID FROM Has_Pet AS T1 JOIN Pets AS T2 ON T1.PetID  =  T2.PetID WHERE T2.pet_type  =  \"dog\" EXCEPT",
+        "gold": "SELECT T1.fname ,  T1.age FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid JOIN pets AS T3 ON T3.petid  =  T2.petid WHERE T3.pettype  =  'dog' AND",
+        "differs": []
+      }
+    ],
+    "filter": [
+      {
+        "index": 111,
+        "pred": "SELECT T1.Accelerate FROM cars_data AS T1 JOIN car_names AS T2 ON T1.id  =  T2.makeid WHERE T2.Model  =  'amc hornet sportabout (sw)'",
+        "gold": "SELECT T1.Accelerate FROM CARS_DATA AS T1 JOIN CAR_NAMES AS T2 ON T1.Id  =  T2.MakeId WHERE T2.Make  =  'amc hornet sportabout (sw)';",
+        "differs": [
+          "filter"
+        ]
+      },
+      {
+        "index": 154,
+        "pred": "SELECT DISTINCT YEAR FROM cars_data WHERE Weight  <  4000 INTERSECT SELECT DISTINCT YEAR FROM cars_data WHERE Weight  >  3000",
+        "gold": "select distinct year from cars_data where weight between 3000 and 4000;",
+        "differs": [
+          "filter"
+        ]
+      },
+      {
+        "index": 361,
+        "pred": "SELECT Other_Details FROM Paragraphs WHERE Paragraph_Text  =  'Korea '",
+        "gold": "select other_details from paragraphs where paragraph_text like 'korea'",
+        "differs": [
+          "filter"
+        ]
+      }
+    ],
+    "having": [
+      {
+        "index": 377,
+        "pred": "SELECT document_id FROM Paragraphs GROUP BY document_id HAVING count(*)  >=  2",
+        "gold": "SELECT document_id FROM Paragraphs GROUP BY document_id HAVING count(*) BETWEEN 1 AND 2",
+        "differs": [
+          "having"
+        ]
+      },
+      {
+        "index": 526,
+        "pred": "SELECT T1.course_name ,  T1.course_id FROM Courses AS T1 JOIN Sections AS T2 ON T1.course_id  =  T2.course_id GROUP BY T1.course_id HAVING count(*)  <  2",
+        "gold": "SELECT T1.course_name ,  T1.course_id FROM Courses AS T1 JOIN Sections AS T2 ON T1.course_id  =  T2.course_id GROUP BY T1.course_id HAVING count(*)  <=  2",
+        "differs": [
+          "having"
+        ]
+      }
+    ],
+    "ordering": [
+      {
+        "index": 401,
+        "pred": "SELECT T3.Name ,  T2.Course FROM course_arrange AS T1 JOIN course AS T2 ON T1.Course_ID  =  T2.Course_ID JOIN teacher AS T3 ON T1.Teacher_ID  =  T3.Teacher_ID O",
+        "gold": "SELECT T3.Name ,  T2.Course FROM course_arrange AS T1 JOIN course AS T2 ON T1.Course_ID  =  T2.Course_ID JOIN teacher AS T3 ON T1.Teacher_ID  =  T3.Teacher_ID O",
+        "differs": [
+          "ordering"
+        ]
+      },
+      {
+        "index": 402,
+        "pred": "SELECT T3.Name ,  T2.Course FROM course_arrange AS T1 JOIN course AS T2 ON T1.Course_ID  =  T2.Course_ID JOIN teacher AS T3 ON T1.Teacher_ID  =  T3.Teacher_ID O",
+        "gold": "SELECT T3.Name ,  T2.Course FROM course_arrange AS T1 JOIN course AS T2 ON T1.Course_ID  =  T2.Course_ID JOIN teacher AS T3 ON T1.Teacher_ID  =  T3.Teacher_ID O",
+        "differs": [
+          "ordering"
+        ]
+      },
+      {
+        "index": 453,
+        "pred": "SELECT first_name ,  country_code FROM players ORDER BY birth_date DESC LIMIT 1",
+        "gold": "SELECT first_name ,  country_code FROM players ORDER BY birth_date LIMIT 1",
+        "differs": [
+          "ordering"
+        ]
+      }
+    ],
+    "join_condition": [
+      {
+        "index": 884,
+        "pred": "SELECT T2.name ,  count(*) FROM Friend AS T1 JOIN Highschooler AS T2 ON T1.friend_id  =  T2.id GROUP BY T1.student_id",
+        "gold": "SELECT T2.name ,  count(*) FROM Friend AS T1 JOIN Highschooler AS T2 ON T1.student_id  =  T2.id GROUP BY T1.student_id",
+        "differs": [
+          "join_condition"
+        ]
+      },
+      {
+        "index": 889,
+        "pred": "SELECT T2.name FROM friend AS T1 JOIN highschooler AS T2 ON T1.friend_id  =  T2.id GROUP BY T1.student_id HAVING count(*)  >=  3",
+        "gold": "SELECT T2.name FROM Friend AS T1 JOIN Highschooler AS T2 ON T1.student_id  =  T2.id GROUP BY T1.student_id HAVING count(*)  >=  3",
+        "differs": [
+          "join_condition"
+        ]
+      },
+      {
+        "index": 900,
+        "pred": "SELECT DISTINCT T1.name FROM highschooler AS T1 JOIN friend AS T2 ON T1.id  =  T2.student_id JOIN likes AS T3 ON T1.id  =  T3.student_id",
+        "gold": "SELECT T2.name FROM Friend AS T1 JOIN Highschooler AS T2 ON T1.student_id  =  T2.id INTERSECT SELECT T2.name FROM Likes AS T1 JOIN Highschooler AS T2 ON T1.like",
+        "differs": [
+          "join_condition"
+        ]
+      }
+    ],
+    "operational": [
+      {
+        "index": 922,
+        "pred": "SELECT T1.professional_id ,  T1.last_name ,  T1.cell_number FROM Professionals AS T1 JOIN Treatments AS T2 ON T1.professional_id  =  T2.professional_id WHERE T1",
+        "gold": "SELECT professional_id ,  last_name ,  cell_number FROM Professionals WHERE state  =  'Indiana' UNION SELECT T1.professional_id ,  T1.last_name ,  T1.cell_numbe",
+        "differs": []
+      },
+      {
+        "index": 923,
+        "pred": "SELECT T1.professional_id ,  T1.last_name ,  T1.cell_number FROM Professionals AS T1 JOIN Treatments AS T2 ON T1.professional_id  =  T2.professional_id WHERE T1",
+        "gold": "SELECT professional_id ,  last_name ,  cell_number FROM Professionals WHERE state  =  'Indiana' UNION SELECT T1.professional_id ,  T1.last_name ,  T1.cell_numbe",
+        "differs": []
+      },
+      {
+        "index": 928,
+        "pred": "SELECT professional_id ,  role_code ,  email_address FROM Professionals EXCEPT SELECT professional_id FROM Treatments",
+        "gold": "SELECT professional_id ,  role_code ,  email_address FROM Professionals EXCEPT SELECT T1.professional_id ,  T1.role_code ,  T1.email_address FROM Professionals ",
+        "differs": []
+      }
+    ]
+  }
+}

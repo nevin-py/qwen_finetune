@@ -1,0 +1,336 @@
+{
+  "cell": "B",
+  "dataset": "sparc",
+  "n": 1203,
+  "scored": 1202,
+  "accuracy": 0.6131,
+  "accuracy_ci95": [
+    0.584,
+    0.6389
+  ],
+  "exact_match": 0.4226,
+  "exec_valid_rate": 0.9376,
+  "pred_errors": {
+    "operational": 9,
+    "no_such_column": 63,
+    "no_such_table": 3
+  },
+  "by_difficulty": {},
+  "failure_taxonomy": {
+    "multiple_clauses": 172,
+    "semantic_mismatch": 107,
+    "no_such_column": 63,
+    "filter": 51,
+    "ordering": 22,
+    "group_by": 14,
+    "tables": 11,
+    "operational": 9,
+    "agg": 8,
+    "join_condition": 3,
+    "no_such_table": 3,
+    "having": 2
+  },
+  "taxonomy_examples": {
+    "semantic_mismatch": [
+      {
+        "index": 0,
+        "pred": "SELECT Airline FROM airlines",
+        "gold": "SELECT * FROM AIRLINES",
+        "differs": []
+      },
+      {
+        "index": 4,
+        "pred": "SELECT Abbreviation FROM airlines WHERE Airline  =  \"Jetblue Airways\"",
+        "gold": "SELECT Abbreviation FROM AIRLINES WHERE Airline  =  \"JetBlue Airways\"",
+        "differs": []
+      },
+      {
+        "index": 9,
+        "pred": "SELECT Airline FROM airlines",
+        "gold": "SELECT * FROM AIRLINES",
+        "differs": []
+      }
+    ],
+    "filter": [
+      {
+        "index": 1,
+        "pred": "SELECT Airline FROM Airlines WHERE Abbreviation  =  \"JetBlue\"",
+        "gold": "SELECT * FROM AIRLINES WHERE Airline  =  \"JetBlue Airways\"",
+        "differs": [
+          "filter"
+        ]
+      },
+      {
+        "index": 6,
+        "pred": "SELECT * FROM airlines WHERE country  =  'USA'",
+        "gold": "SELECT Airline ,  Abbreviation FROM AIRLINES WHERE Country  =  \"USA\"",
+        "differs": [
+          "filter"
+        ]
+      },
+      {
+        "index": 16,
+        "pred": "SELECT * FROM airlines WHERE Abbreviation  =  'UAL'",
+        "gold": "SELECT Airline FROM AIRLINES WHERE Abbreviation  =  \"UAL\"",
+        "differs": [
+          "filter"
+        ]
+      }
+    ],
+    "multiple_clauses": [
+      {
+        "index": 38,
+        "pred": "SELECT T1.FlightNo FROM flights AS T1 JOIN airlines AS T2 ON T1.Airline  =  T2.uid WHERE T2.Airline  =  \"United\"",
+        "gold": "SELECT * FROM AIRLINES WHERE Airline  =  \"United Airlines\"",
+        "differs": [
+          "filter",
+          "join_condition",
+          "tables"
+        ]
+      },
+      {
+        "index": 39,
+        "pred": "SELECT count(*) FROM flights AS T1 JOIN airlines AS T2 ON T1.Airline  =  T2.uid WHERE T2.Airline  =  \"United Airlines\"",
+        "gold": "SELECT count(*) FROM AIRLINES WHERE Airline  =  \"United Airlines\"",
+        "differs": [
+          "filter",
+          "join_condition",
+          "tables"
+        ]
+      },
+      {
+        "index": 41,
+        "pred": "SELECT T1.FlightNo FROM flights AS T1 JOIN airlines AS T2 ON T1.Airline  =  T2.uid WHERE T2.Airline  =  \"United\"",
+        "gold": "SELECT * FROM AIRLINES WHERE Airline  =  \"United Airlines\"",
+        "differs": [
+          "filter",
+          "join_condition",
+          "tables"
+        ]
+      }
+    ],
+    "operational": [
+      {
+        "index": 61,
+        "pred": "SELECT Abbreviation ,  Country FROM airlines ORDER BY count(*)",
+        "gold": "SELECT T1.Abbreviation ,  T1.Country FROM AIRLINES AS T1 JOIN FLIGHTS AS T2 ON T1.uid  =  T2.Airline GROUP BY T1.Airline ORDER BY count(*)",
+        "differs": []
+      },
+      {
+        "index": 62,
+        "pred": "SELECT abbreviation ,  country FROM airlines ORDER BY count(*) LIMIT 1",
+        "gold": "SELECT T1.Abbreviation ,  T1.Country FROM AIRLINES AS T1 JOIN FLIGHTS AS T2 ON T1.uid  =  T2.Airline GROUP BY T1.Airline ORDER BY count(*) LIMIT 1",
+        "differs": []
+      },
+      {
+        "index": 559,
+        "pred": "SELECT first_name ,  last_name FROM players ORDER BY birth_date",
+        "gold": "SELECT first_name ,  last_name FROM players WHERE hand  =  'L' ORDER BY birth_date",
+        "differs": []
+      }
+    ],
+    "no_such_column": [
+      {
+        "index": 96,
+        "pred": "SELECT petage FROM pets ORDER BY petage",
+        "gold": "SELECT * FROM pets ORDER BY pet_age",
+        "differs": []
+      },
+      {
+        "index": 98,
+        "pred": "SELECT weight FROM pets WHERE petage  =  (SELECT min(pet_age) FROM pets)",
+        "gold": "SELECT weight FROM pets ORDER BY pet_age LIMIT 1",
+        "differs": []
+      },
+      {
+        "index": 120,
+        "pred": "SELECT T1.Fname ,  T1.Lname FROM Student AS T1 JOIN Has_Pet AS T2 ON T1.StuID  =  T2.StuID JOIN Pets AS T3 ON T2.PetID  =  T3.PetID WHERE T3.pet_type  =  \"Dog\"",
+        "gold": "SELECT * FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid JOIN pets AS T3 ON T3.petid  =  T2.petid WHERE T3.pettype  =  'dog'",
+        "differs": []
+      }
+    ],
+    "ordering": [
+      {
+        "index": 97,
+        "pred": "SELECT weight FROM pets",
+        "gold": "SELECT weight FROM pets ORDER BY pet_age",
+        "differs": [
+          "ordering"
+        ]
+      },
+      {
+        "index": 251,
+        "pred": "SELECT Name FROM country ORDER BY Population ASC LIMIT 1",
+        "gold": "SELECT * FROM country ORDER BY Population LIMIT 1",
+        "differs": [
+          "ordering"
+        ]
+      },
+      {
+        "index": 268,
+        "pred": "SELECT Name FROM country ORDER BY Population ASC",
+        "gold": "SELECT * FROM country ORDER BY Population",
+        "differs": [
+          "ordering"
+        ]
+      }
+    ],
+    "group_by": [
+      {
+        "index": 141,
+        "pred": "SELECT count(*) ,  T1.fname FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid GROUP BY T1.fname",
+        "gold": "SELECT count(*) ,  T1.stuid FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid GROUP BY T1.stuid",
+        "differs": [
+          "group_by"
+        ]
+      },
+      {
+        "index": 479,
+        "pred": "SELECT count(*) ,  make FROM car_names GROUP BY make",
+        "gold": "SELECT Model, count(*) FROM CAR_NAMES GROUP BY Model;",
+        "differs": [
+          "group_by"
+        ]
+      },
+      {
+        "index": 587,
+        "pred": "SELECT hand ,  count(*) FROM players GROUP BY hand HAVING count(*)  >  50",
+        "gold": "SELECT count(*), country_code FROM players GROUP BY country_code HAVING count(*) > 50",
+        "differs": [
+          "group_by"
+        ]
+      }
+    ],
+    "agg": [
+      {
+        "index": 235,
+        "pred": "SELECT max(Population) FROM country WHERE Continent  =  \"Asia\"",
+        "gold": "SELECT min(population) FROM country WHERE Continent  =  \"Asia\"",
+        "differs": [
+          "agg"
+        ]
+      },
+      {
+        "index": 360,
+        "pred": "SELECT Nationality ,  COUNT(*) FROM people GROUP BY Nationality",
+        "gold": "SELECT * FROM people GROUP BY Nationality",
+        "differs": [
+          "agg"
+        ]
+      },
+      {
+        "index": 533,
+        "pred": "SELECT T1.id ,  T1.maker FROM car_makers AS T1 JOIN model_list AS T2 ON T1.id  =  T2.maker GROUP BY T1.id",
+        "gold": "SELECT T1.Id ,  T1.Maker, count(*) FROM CAR_MAKERS AS T1 JOIN MODEL_LIST AS T2 ON T1.Id  =  T2.Maker GROUP BY T1.Id;",
+        "differs": [
+          "agg"
+        ]
+      }
+    ],
+    "tables": [
+      {
+        "index": 239,
+        "pred": "SELECT Code FROM country",
+        "gold": "SELECT CountryCode FROM countrylanguage",
+        "differs": [
+          "tables"
+        ]
+      },
+      {
+        "index": 241,
+        "pred": "SELECT Code FROM country",
+        "gold": "SELECT DISTINCT CountryCode FROM countrylanguage",
+        "differs": [
+          "tables"
+        ]
+      },
+      {
+        "index": 426,
+        "pred": "SELECT DISTINCT Model FROM car_names",
+        "gold": "SELECT DISTINCT model FROM MODEL_LIST;",
+        "differs": [
+          "tables"
+        ]
+      }
+    ],
+    "having": [
+      {
+        "index": 257,
+        "pred": "SELECT T1.Name ,  count(*) FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode GROUP BY T1.Name",
+        "gold": "SELECT COUNT(T2.Language) ,  T1.Name FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode GROUP BY T1.Name HAVING COUNT(*)  >  2",
+        "differs": [
+          "having"
+        ]
+      },
+      {
+        "index": 263,
+        "pred": "SELECT avg(LifeExpectancy) ,  sum(Population) FROM country GROUP BY Continent",
+        "gold": "SELECT sum(Population) ,  avg(LifeExpectancy) ,  Continent FROM country GROUP BY Continent HAVING avg(LifeExpectancy)  <  72",
+        "differs": [
+          "having"
+        ]
+      }
+    ],
+    "join_condition": [
+      {
+        "index": 404,
+        "pred": "SELECT T1.CountryName ,  T2.Continent FROM countries AS T1 JOIN continents AS T2 ON T1.Continent  =  T2.ContId",
+        "gold": "SELECT T1.ContId ,  T1.Continent , * FROM CONTINENTS AS T1 JOIN COUNTRIES AS T2 ON T1.ContId  =  T2.Continent;",
+        "differs": [
+          "join_condition"
+        ]
+      },
+      {
+        "index": 920,
+        "pred": "SELECT count(*) ,  T1.student_id FROM friend AS T1 JOIN highschooler AS T2 ON T1.friend_id  =  T2.id GROUP BY T1.student_id",
+        "gold": "SELECT T2.name, count(*) FROM Friend AS T1 JOIN Highschooler AS T2 ON T1.student_id  =  T2.id GROUP BY T1.student_id",
+        "differs": [
+          "join_condition"
+        ]
+      },
+      {
+        "index": 967,
+        "pred": "SELECT T2.name FROM Likes AS T1 JOIN Highschooler AS T2 ON T1.liked_id  =  T2.id WHERE T2.name  =  \"Kyle\"",
+        "gold": "SELECT T3.name  FROM Likes AS T1 JOIN Highschooler AS T2 ON T1.liked_id  =  T2.id JOIN Highschooler as T3 on T3.ID = T1.student_id WHERE T2.name  =  \"Kyle\"",
+        "differs": [
+          "join_condition"
+        ]
+      }
+    ],
+    "no_such_table": [
+      {
+        "index": 571,
+        "pred": "SELECT T2.loser_name FROM tournaments AS T1 JOIN matches AS T2 ON T1.tournament_id  =  T2.tourney_id WHERE T1.tournament_name  =  'Australian Open' ORDER BY T2.",
+        "gold": "SELECT loser_name FROM matches WHERE tourney_name = 'Australian Open' ORDER BY loser_rank_points DESC LIMIT 1",
+        "differs": []
+      },
+      {
+        "index": 775,
+        "pred": "SELECT T2.song_name FROM singer AS T1 JOIN song AS T2 ON T1.singer_id  =  T2.singer_id WHERE T1.age  >  (SELECT avg(age) FROM singer)",
+        "gold": "SELECT song_name FROM singer WHERE age  >  (SELECT avg(age) FROM singer)",
+        "differs": []
+      },
+      {
+        "index": 1075,
+        "pred": "SELECT count(*) FROM student_enrolment AS T1 JOIN degrees_programs AS T2 ON T1.degree_program_id  =  T2.degree_program_id WHERE T2.degree_summary_name  =  \"Bach",
+        "gold": "SELECT DISTINCT count(*) FROM Students AS T1 JOIN Student_Enrolment AS T2 ON T1.student_id  =  T2.student_id JOIN Degree_Programs AS T3 ON T2.degree_program_id ",
+        "differs": []
+      }
+    ]
+  },
+  "conversation": {
+    "turns_scored": 1203,
+    "turn_accuracy": 0.6126,
+    "query_consistency": 0.6126,
+    "per_turn_accuracy": {
+      "1": 0.7109,
+      "2": 0.6066,
+      "3": 0.5111,
+      "4": 0.4886,
+      ">4": 0.0
+    },
+    "interaction_accuracy": 0.3341,
+    "average_progress": 0.6281,
+    "n_dialogues": 422
+  }
+}

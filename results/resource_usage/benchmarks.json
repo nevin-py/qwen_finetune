@@ -1,0 +1,64 @@
+{
+  "timestamp": "2026-09-28 21:43:18",
+  "system": {
+    "ram_total_gb": 15.24,
+    "vram_total_gb": 3.68,
+    "torch": "2.14.0+cu130"
+  },
+  "disk_gb": {
+    "hf_model_cache": 5.772,
+    "lora_adapter": 0.207,
+    "data_spider": 0.847,
+    "data_bird": 1.392,
+    "data_sparc": 0.03
+  },
+  "gpu_configs": [
+    {
+      "config": "4bit_base",
+      "load_s": 6.9,
+      "peak_vram_gb": 1.344,
+      "process_peak_rss_gb": 4.011,
+      "n": 20,
+      "max_new_tokens": 128,
+      "mean_s": 1.162,
+      "p50_s": 1.111,
+      "p95_s": 1.601,
+      "output_tokens_per_s": 27.71
+    },
+    {
+      "config": "4bit_base_adapter",
+      "load_s": 4.4,
+      "peak_vram_gb": 2.225,
+      "process_peak_rss_gb": 4.232,
+      "n": 20,
+      "max_new_tokens": 128,
+      "mean_s": 1.892,
+      "p50_s": 1.795,
+      "p95_s": 3.431,
+      "output_tokens_per_s": 16.8
+    },
+    {
+      "config": "bf16_base",
+      "load_s": 3.6,
+      "peak_vram_gb": 3.427,
+      "process_peak_rss_gb": 4.342,
+      "n": 10,
+      "max_new_tokens": 128,
+      "mean_s": 6.249,
+      "p50_s": 6.747,
+      "p95_s": 9.908,
+      "output_tokens_per_s": 5.46
+    }
+  ],
+  "cpu_config": {
+    "config": "fp32_cpu",
+    "load_s": 17.5,
+    "process_peak_rss_gb": 5.559,
+    "n": 5,
+    "max_new_tokens": 64,
+    "mean_s": 21.407,
+    "p50_s": 25.608,
+    "p95_s": 37.85,
+    "output_tokens_per_s": 1.57
+  }
+}

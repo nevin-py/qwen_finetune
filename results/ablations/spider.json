@@ -1,0 +1,47 @@
+{
+  "n": 1032,
+  "slots_accuracy": [
+    0.6754,
+    0.6618,
+    0.6667,
+    0.6705,
+    0.6647
+  ],
+  "sc_majority_accuracy": 0.7016,
+  "oracle_pool_accuracy": 0.7297,
+  "paired": [
+    {
+      "vs": "A->B",
+      "delta": 0.1676,
+      "ci95": [
+        0.125,
+        0.2083
+      ],
+      "mcnemar_p": 0.0,
+      "improved": 205,
+      "regressed": 32
+    },
+    {
+      "vs": "B->C",
+      "delta": 0.0281,
+      "ci95": [
+        -0.0107,
+        0.0659
+      ],
+      "mcnemar_p": 0.0,
+      "improved": 31,
+      "regressed": 2
+    },
+    {
+      "vs": "C->D",
+      "delta": 0.0048,
+      "ci95": [
+        -0.0339,
+        0.0436
+      ],
+      "mcnemar_p": 0.125,
+      "improved": 6,
+      "regressed": 1
+    }
+  ]
+}

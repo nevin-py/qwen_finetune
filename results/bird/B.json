@@ -1,0 +1,359 @@
+{
+  "cell": "B",
+  "dataset": "bird",
+  "n": 1534,
+  "scored": 1532,
+  "accuracy": 0.2742,
+  "accuracy_ci95": [
+    0.2539,
+    0.2957
+  ],
+  "exact_match": 0.0176,
+  "exec_valid_rate": 0.6495,
+  "pred_errors": {
+    "syntax": 70,
+    "no_such_column": 397,
+    "no_such_function": 39,
+    "operational": 15,
+    "no_such_table": 10,
+    "ambiguous_column": 5,
+    "timeout": 1
+  },
+  "by_difficulty": {
+    "challenging": 0.0625,
+    "moderate": 0.1274,
+    "simple": 0.3805
+  },
+  "failure_taxonomy": {
+    "multiple_clauses": 471,
+    "no_such_column": 397,
+    "filter": 76,
+    "syntax": 70,
+    "no_such_function": 39,
+    "operational": 15,
+    "no_such_table": 10,
+    "semantic_mismatch": 9,
+    "join_condition": 9,
+    "ambiguous_column": 5,
+    "ordering": 4,
+    "agg": 3,
+    "timeout": 1,
+    "tables": 1,
+    "limit": 1,
+    "group_by": 1
+  },
+  "taxonomy_examples": {
+    "syntax": [
+      {
+        "index": 0,
+        "pred": "SELECT max(`Percent (%) Eligible Free (K-12)`) FROM frpm WHERE County Name  =  \"Alameda\"",
+        "gold": "SELECT `Free Meal Count (K-12)` / `Enrollment (K-12)` FROM frpm WHERE `County Name` = 'Alameda' ORDER BY (CAST(`Free Meal Count (K-12)` AS REAL) / `Enrollment (",
+        "differs": []
+      },
+      {
+        "index": 1,
+        "pred": "SELECT min(T1.Free Meal Count (Ages 5-17)) ,  min(T1.Percent (%) Eligible Free (Ages 5-17)) ,  min(T1.Enrollment (Ages 5-17)) FROM frpm AS T1 JOIN schools AS T2",
+        "gold": "SELECT `Free Meal Count (Ages 5-17)` / `Enrollment (Ages 5-17)` FROM frpm WHERE `Educational Option Type` = 'Continuation School' AND `Free Meal Count (Ages 5-1",
+        "differs": []
+      },
+      {
+        "index": 2,
+        "pred": "SELECT T2.Zip FROM frpm AS T1 JOIN schools AS T2 ON T1.CDSCode  =  T2.CDSCode WHERE T1.Charter School (Y/N)  =  1 AND T1.County Name  =  \"Fresno County Office o",
+        "gold": "SELECT T2.Zip FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T1.`District Name` = 'Fresno County Office of Education' AND T1.`Charter",
+        "differs": []
+      }
+    ],
+    "multiple_clauses": [
+      {
+        "index": 6,
+        "pred": "SELECT T1.School FROM schools AS T1 JOIN satscores AS T2 ON T1.CDSCode  =  T2.cds WHERE T2.NumGE1500  >  500 AND Magnet  =  1 OR T2.NumGE1500  >  500 AND GSoffe",
+        "gold": "SELECT T2.School FROM satscores AS T1 INNER JOIN schools AS T2 ON T1.cds = T2.CDSCode WHERE T2.Magnet = 1 AND T1.NumTstTakr > 500",
+        "differs": [
+          "filter",
+          "join_condition"
+        ]
+      },
+      {
+        "index": 9,
+        "pred": "SELECT count(*) FROM schools AS T1 JOIN satscores AS T2 ON T1.cdscode  =  T2.cds WHERE avgscrmath  >  560 AND T1.charter  =  1",
+        "gold": "SELECT COUNT(T2.`School Code`) FROM satscores AS T1 INNER JOIN frpm AS T2 ON T1.cds = T2.CDSCode WHERE T1.AvgScrMath > 560 AND T2.`Charter Funding Type` = 'Dire",
+        "differs": [
+          "filter",
+          "join_condition",
+          "tables"
+        ]
+      },
+      {
+        "index": 13,
+        "pred": "SELECT T1.Phone FROM schools AS T1 JOIN satscores AS T2 ON T1.CDSCode  =  T2.cds ORDER BY NumGE1500 / NumTstTakr DESC LIMIT 3",
+        "gold": "SELECT T1.Phone FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds ORDER BY CAST(T2.NumGE1500 AS REAL) / T2.NumTstTakr DESC LIMIT 3",
+        "differs": [
+          "function",
+          "ordering"
+        ]
+      }
+    ],
+    "no_such_column": [
+      {
+        "index": 10,
+        "pred": "SELECT T1.FRPM_COUNT FROM frpm AS T1 JOIN schools AS T2 ON T1.CDSCode  =  T2.CDSCode JOIN satscores AS T3 ON T1.CDSCode  =  T3.cds WHERE T3.AvgScrRead  =  (SELE",
+        "gold": "SELECT T2.`FRPM Count (Ages 5-17)` FROM satscores AS T1 INNER JOIN frpm AS T2 ON T1.cds = T2.CDSCode ORDER BY T1.AvgScrRead DESC LIMIT 1",
+        "differs": []
+      },
+      {
+        "index": 15,
+        "pred": "SELECT T1.District FROM frpm AS T1 JOIN schools AS T2 ON T1.CDSCode  =  T2.CDSCode WHERE T2.StatusType  =  'Active' GROUP BY T1.District ORDER BY avg(T2.AvgScrR",
+        "gold": "SELECT T1.District FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds WHERE T1.StatusType = 'Active' ORDER BY T2.AvgScrRead DESC LIMIT 1",
+        "differs": []
+      },
+      {
+        "index": 24,
+        "pred": "SELECT T1.School FROM schools AS T1 JOIN satscores AS T2 ON T1.CDSCode  =  T2.cds WHERE T2.FreeMealCount  >  0.1 AND T2.NumGE1500  >=  1500",
+        "gold": "SELECT T2.`School Name` FROM satscores AS T1 INNER JOIN frpm AS T2 ON T1.cds = T2.CDSCode WHERE CAST(T2.`Free Meal Count (K-12)` AS REAL) / T2.`Enrollment (K-12",
+        "differs": []
+      }
+    ],
+    "filter": [
+      {
+        "index": 16,
+        "pred": "SELECT count(*) FROM schools AS T1 JOIN satscores AS T2 ON T1.CDSCode  =  T2.cds WHERE T2.NumTstTakr  <  100 AND T1.County  =  \"Alameda\"",
+        "gold": "SELECT COUNT(T1.CDSCode) FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds WHERE T1.StatusType = 'Merged' AND T2.NumTstTakr < 100 AND T1.Coun",
+        "differs": [
+          "filter"
+        ]
+      },
+      {
+        "index": 56,
+        "pred": "SELECT count(*) FROM schools WHERE mailstate  =  'CA' AND mailcity  =  \"San Joaquin\" AND statustype  =  \"Active\"",
+        "gold": "SELECT COUNT(CDSCode) FROM schools WHERE City = 'San Joaquin' AND MailState = 'CA' AND StatusType = 'Active'",
+        "differs": [
+          "filter"
+        ]
+      },
+      {
+        "index": 58,
+        "pred": "SELECT phone ,  ext FROM schools WHERE ZIP  =  \"95203-3704\"",
+        "gold": "SELECT Phone, Ext, School FROM schools WHERE Zip = '95203-3704'",
+        "differs": [
+          "filter"
+        ]
+      }
+    ],
+    "no_such_function": [
+      {
+        "index": 23,
+        "pred": "SELECT T1.School ,  T1.Street FROM schools AS T1 JOIN frpm AS T2 ON T1.CDSCode  =  T2.CDSCode WHERE Enroll(5-17) - Enroll(K-12)  >  30",
+        "gold": "SELECT T1.School, T1.Street FROM schools AS T1 INNER JOIN frpm AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.`Enrollment (K-12)` - T2.`Enrollment (Ages 5-17)` > 30",
+        "differs": []
+      },
+      {
+        "index": 35,
+        "pred": "SELECT admemail1 FROM schools WHERE charter  =  1 ORDER BY enrollment(1-12) LIMIT 1",
+        "gold": "SELECT T2.AdmEmail1 FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T1.`Charter School (Y/N)` = 1 ORDER BY T1.`Enrollment (K-12)` ASC ",
+        "differs": []
+      },
+      {
+        "index": 487,
+        "pred": "SELECT DIVIDE(SUM(cardKingdomFoilId IS NOT NULL AND cardKingdomId IS NOT NULL), SUM(name = 'Coldsnap'))*100 FROM cards WHERE setCode = \"Coldsnap\"",
+        "gold": "SELECT CAST(SUM(CASE WHEN T1.cardKingdomFoilId IS NOT NULL AND T1.cardKingdomId IS NOT NULL THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(T1.id) FROM cards AS T1 IN",
+        "differs": []
+      }
+    ],
+    "operational": [
+      {
+        "index": 25,
+        "pred": "SELECT T1.FundingType FROM schools AS T1 JOIN satscores AS T2 ON T1.CDSCode  =  T2.cds WHERE avg(T2.AvgScrMath)  >  400 GROUP BY T1.FundingType",
+        "gold": "SELECT T1.sname, T2.`Charter Funding Type` FROM satscores AS T1 INNER JOIN frpm AS T2 ON T1.cds = T2.CDSCode WHERE T2.`District Name` LIKE 'Riverside%' GROUP BY",
+        "differs": []
+      },
+      {
+        "index": 51,
+        "pred": "SELECT T1.MailStreet ,  T1.School FROM schools AS T1 JOIN satscores AS T2 ON T1.CDSCode  =  T2.cds ORDER BY avg(T2.AvgScrRead) LIMIT 1",
+        "gold": "SELECT T2.MailStreet, T2.School FROM satscores AS T1 INNER JOIN schools AS T2 ON T1.cds = T2.CDSCode WHERE T1.AvgScrRead IS NOT NULL ORDER BY T1.AvgScrRead ASC ",
+        "differs": []
+      },
+      {
+        "index": 92,
+        "pred": "SELECT count(*) FROM district WHERE avg(A11)  >  6000 AND avg(A11)  <  10000",
+        "gold": "SELECT COUNT(DISTINCT T2.district_id)  FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.gender = 'F' AND T2.A11 BETWEEN 6",
+        "differs": []
+      }
+    ],
+    "no_such_table": [
+      {
+        "index": 50,
+        "pred": "SELECT T1.School ,  T2.Street FROM schools AS T1 JOIN addresses AS T2 ON T1.CDSCode  =  T2.CDSCode WHERE T1.StatusType  =  'Public' AND T1.FundingType  =  'Fede",
+        "gold": "SELECT T2.MailStreet, T2.School FROM satscores AS T1 INNER JOIN schools AS T2 ON T1.cds = T2.CDSCode ORDER BY T1.AvgScrMath DESC LIMIT 6, 1",
+        "differs": []
+      },
+      {
+        "index": 78,
+        "pred": "SELECT T1.GradeSpan FROM gradespan AS T1 JOIN frpm AS T2 ON T1.CDSCode  =  T2.GradeSpanCode WHERE T2.City  =  \"Adelanto\" GROUP BY T1.GradeSpan ORDER BY COUNT(*)",
+        "gold": "SELECT GSserved FROM schools WHERE City = 'Adelanto' GROUP BY GSserved ORDER BY COUNT(GSserved) DESC LIMIT 1",
+        "differs": []
+      },
+      {
+        "index": 84,
+        "pred": "SELECT T1.District ,  T1.Street FROM schools AS T1 JOIN adm AS T2 ON T1.CDSCode  =  T2.CDSCode GROUP BY T1.Street ORDER BY count(*) DESC LIMIT 2",
+        "gold": "SELECT DISTINCT T1.AdmFName1, T1.District FROM schools AS T1 INNER JOIN ( SELECT admfname1 FROM schools GROUP BY admfname1 ORDER BY COUNT(admfname1) DESC LIMIT ",
+        "differs": []
+      }
+    ],
+    "ordering": [
+      {
+        "index": 80,
+        "pred": "SELECT T1.school ,  T1.latitude FROM schools AS T1 JOIN frpm AS T2 ON T1.CDSCode  =  T2.CDSCode ORDER BY latitude DESC LIMIT 1",
+        "gold": "SELECT T1.`School Type`, T1.`School Name`, T2.Latitude FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode ORDER BY T2.Latitude DESC LIMIT 1",
+        "differs": [
+          "ordering"
+        ]
+      },
+      {
+        "index": 342,
+        "pred": "SELECT name FROM cards ORDER BY faceConvertedManaCost DESC LIMIT 1",
+        "gold": "SELECT name FROM cards ORDER BY faceConvertedManaCost LIMIT 1",
+        "differs": [
+          "ordering"
+        ]
+      },
+      {
+        "index": 666,
+        "pred": "SELECT T2.id FROM votes AS T1 JOIN posts AS T2 ON T1.PostId  =  T2.Id WHERE T1.UserId  =  1465 ORDER BY T1.bountyamount DESC LIMIT 1",
+        "gold": "SELECT T2.Id FROM votes AS T1 INNER JOIN posts AS T2 ON T1.PostId = T2.Id WHERE T1.UserId = 1465 ORDER BY T2.FavoriteCount DESC LIMIT 1",
+        "differs": [
+          "ordering"
+        ]
+      }
+    ],
+    "agg": [
+      {
+        "index": 172,
+        "pred": "SELECT count(*) ,  sum(type = 'disponent') FROM disp WHERE account_id BETWEEN 1 AND 10",
+        "gold": "SELECT SUM(type = 'OWNER') , SUM(type = 'DISPONENT') FROM disp WHERE account_id BETWEEN 1 AND 10",
+        "differs": [
+          "agg"
+        ]
+      },
+      {
+        "index": 686,
+        "pred": "SELECT count(*) FROM posts WHERE viewcount  >  ( SELECT avg(viewcount) FROM posts )",
+        "gold": "SELECT Id FROM posts WHERE ViewCount > ( SELECT AVG(ViewCount) FROM posts )",
+        "differs": [
+          "agg"
+        ]
+      },
+      {
+        "index": 883,
+        "pred": "SELECT count(*) ,  name FROM races WHERE YEAR = 2005 ORDER BY name DESC",
+        "gold": "SELECT name FROM races WHERE year = 2005 ORDER BY name DESC",
+        "differs": [
+          "agg"
+        ]
+      }
+    ],
+    "ambiguous_column": [
+      {
+        "index": 215,
+        "pred": "SELECT count(DISTINCT atom_id) FROM atom AS T1 JOIN connected AS T2 ON T1.atom_id  =  T2.atom_id WHERE T1.element  =  'i' INTERSECT SELECT count(DISTINCT atom_i",
+        "gold": "SELECT COUNT(DISTINCT CASE WHEN T1.element = 'i' THEN T1.atom_id ELSE NULL END) AS iodine_nums , COUNT(DISTINCT CASE WHEN T1.element = 's' THEN T1.atom_id ELSE ",
+        "differs": []
+      },
+      {
+        "index": 954,
+        "pred": "SELECT count(*) ,  count(DISTINCT driverid) FROM results AS T1 JOIN drivers AS T2 ON T1.driverid  =  T2.driverid WHERE T2.nationality  =  \"Japanese\" AND T1.year",
+        "gold": "SELECT CAST(SUM(IIF(T1.time IS NOT NULL, 1, 0)) AS REAL) * 100 / COUNT(T1.raceId) FROM results AS T1 INNER JOIN races AS T2 on T1.raceId = T2.raceId INNER JOIN ",
+        "differs": []
+      },
+      {
+        "index": 1015,
+        "pred": "SELECT T1.name FROM races AS T1 JOIN results AS T2 ON T1.raceid = T2.raceid WHERE T2.number = (SELECT min(number) FROM results AS T3 JOIN drivers AS T4 ON T3.dr",
+        "gold": "WITH fastest_lap_times AS ( SELECT T1.raceId, T1.FastestLapTime, (CAST(SUBSTR(T1.FastestLapTime, 1, INSTR(T1.FastestLapTime, ':') - 1) AS REAL) * 60) + (CAST(SU",
+        "differs": []
+      }
+    ],
+    "semantic_mismatch": [
+      {
+        "index": 252,
+        "pred": "SELECT T1.atom_id FROM atom AS T1 JOIN connected AS T2 ON T1.atom_id  =  T2.atom_id WHERE T1.element  =  'pb'",
+        "gold": "SELECT T2.atom_id, T2.atom_id2 FROM atom AS T1 INNER JOIN connected AS T2 ON T1.atom_id = T2.atom_id WHERE T1.element = 'pb'",
+        "differs": []
+      },
+      {
+        "index": 361,
+        "pred": "SELECT count(*) FROM cards AS T1 JOIN legalities AS T2 ON T1.uuid  =  T2.uuid WHERE T2.status  =  'restricted' AND T1.isTextless  =  0",
+        "gold": "SELECT COUNT(DISTINCT T1.id) FROM cards AS T1 INNER JOIN legalities AS T2 ON T1.uuid = T2.uuid WHERE T2.status = 'Restricted' AND T1.isTextless = 0",
+        "differs": []
+      },
+      {
+        "index": 437,
+        "pred": "SELECT name FROM cards WHERE borderColor  =  'black' AND isFullArt  =  1",
+        "gold": "SELECT id FROM cards WHERE borderColor = 'black' AND isFullArt = 1",
+        "differs": []
+      }
+    ],
+    "join_condition": [
+      {
+        "index": 337,
+        "pred": "SELECT T1.element ,  T2.bond_type FROM atom AS T1 JOIN bond AS T2 ON T1.atom_id  =  T2.bond_id WHERE T1.molecule_id  =  'TR002'",
+        "gold": "SELECT DISTINCT T1.element, T2.bond_type FROM atom AS T1 INNER JOIN bond AS T2 ON T1.molecule_id = T2.molecule_id WHERE T1.molecule_id = 'TR002'",
+        "differs": [
+          "join_condition"
+        ]
+      },
+      {
+        "index": 351,
+        "pred": "SELECT T1.name FROM cards AS T1 JOIN foreign_data AS T2 ON T1.uuid  =  T2.multiverseid WHERE T2.language  =  'Japanese'",
+        "gold": "SELECT T1.name FROM cards AS T1 INNER JOIN foreign_data AS T2 ON T1.uuid = T2.uuid WHERE T2.language = 'Japanese'",
+        "differs": [
+          "join_condition"
+        ]
+      },
+      {
+        "index": 381,
+        "pred": "SELECT DISTINCT T1.artist FROM cards AS T1 JOIN foreign_data AS T2 ON T1.uuid  =  T2.multiverseid WHERE T2.language  =  'Chinese Simplified'",
+        "gold": "SELECT T1.artist FROM cards AS T1 INNER JOIN foreign_data AS T2 ON T1.uuid = T2.uuid WHERE T2.language = 'Chinese Simplified'",
+        "differs": [
+          "join_condition"
+        ]
+      }
+    ],
+    "timeout": [
+      {
+        "index": 369,
+        "pred": "SELECT count(*) FROM cards AS T1 JOIN foreign_data AS T2 ON T1.uuid  =  T2.multiverseid WHERE T2.language  =  'German' AND T1.isReprint  =  1",
+        "gold": "SELECT COUNT(T1.id) FROM cards AS T1 INNER JOIN foreign_data AS T2 ON T1.uuid = T2.uuid WHERE T2.language = 'German' AND T1.isReprint = 1",
+        "differs": []
+      }
+    ],
+    "tables": [
+      {
+        "index": 966,
+        "pred": "SELECT count(*) FROM results WHERE raceid = 18",
+        "gold": "SELECT COUNT(driverId) FROM driverStandings WHERE raceId = 18",
+        "differs": [
+          "tables"
+        ]
+      }
+    ],
+    "limit": [
+      {
+        "index": 1132,
+        "pred": "SELECT player_name FROM Player WHERE height  >  180 ORDER BY player_name",
+        "gold": "SELECT player_name FROM Player WHERE height > 180 ORDER BY player_name LIMIT 3",
+        "differs": [
+          "limit"
+        ]
+      }
+    ],
+    "group_by": [
+      {
+        "index": 1467,
+        "pred": "SELECT sum(T1.spent) ,  T2.event_name FROM budget AS T1 JOIN event AS T2 ON T1.link_to_event  =  T2.event_id WHERE T1.category  =  'Speaker Gifts'",
+        "gold": "SELECT SUM(T1.spent), T2.event_name FROM budget AS T1 INNER JOIN event AS T2 ON T1.link_to_event = T2.event_id WHERE T1.category = 'Speaker Gifts' GROUP BY T2.e",
+        "differs": [
+          "group_by"
+        ]
+      }
+    ]
+  }
+}
