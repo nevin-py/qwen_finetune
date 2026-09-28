@@ -4,9 +4,10 @@
 > green (92 tests). Run on CPU already: 0.1 (3 bad gold quarantined), 0.2
 > (reports/leakage_audit.md), 0.3 (train_sft = 6,287), 4.1 (v1 rule weights already
 > at pool oracle 0.79 → tuned == v1; experiments/verifier_weights.json).
-> Awaiting training kickoff: 0.4 (`make_split --stratify` — triggers full val
-> re-baseline), 1.6, 2.x, 3.6, 4.3, Stage 5. Guard: `test_split_is_reproducible`
-> fails if the on-disk split ever changes without an explicit `--stratify`.
+> **Kickoff executed:** 0.4 `--stratify` done (cluster-atomic, train_sft=6288); new-val
+> re-baseline **A=51.0%, B=81.0%** (reports/*_val_n100_v2); Stage 1 reference run in
+> progress (experiments/S1_reference). Remaining: 1.6 gate, 2.x, 3.6, 4.3, Stage 5.
+> Guard: `test_split_is_reproducible` accepts only the two known carves.
 
 Status of v1: complete (18 commits, 81 tests, all gates passed, locked tests consumed once).
 This checklist closes the methodology gaps found in the code review. Every item has an

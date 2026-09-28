@@ -51,3 +51,184 @@ JOIN Products p
 [47/100] department_management: SELECT head_id ,  name FROM head WHERE name LIKE '%Ha%'
 [48/100] ship_1: SELECT T1.Name FROM Ship AS T1 JOIN captain AS T2 ON T1.Ship_ID = T2.Ship_ID WHE
 [49/100] device: SELECT Shop_Name FROM shop ORDER BY Open_Year ASC
+[50/100] hr_1: SELECT * FROM employees WHERE HIRE_DATE < '2002-06-21'
+[51/100] movie_1: SELECT M.title, R.ratingDate FROM Movie AS M JOIN Rating AS R ON M.mID = R.mID W
+[52/100] sports_competition: SELECT name FROM club ORDER BY name DESC
+[53/100] store_1: SELECT T1.name FROM tracks AS T1 INNER JOIN genres AS T2 ON T1.genre_id = T2.id 
+[54/100] cinema: SELECT LOCATION FROM cinema WHERE Capacity > 300 GROUP BY LOCATION HAVING COUNT(
+[55/100] workshop_paper: SELECT T1.Author, T2.Result FROM submission AS T1 JOIN Acceptance AS T2 ON T1.Su
+[56/100] entrepreneur: SELECT T1.Name FROM entrepreneur AS T1 JOIN people AS T2 ON T1.People_ID = T2.Pe
+[57/100] movie_1: SELECT T1.director, T2.title FROM Movie AS T1 JOIN Rating AS T2 ON T1.mID = T2.m
+[58/100] college_2: SELECT COUNT(DISTINCT T1.ID), AVG(T1.salary) FROM instructor AS T1 INNER JOIN de
+[59/100] products_gen_characteristics: SELECT COUNT(T1.characteristic_id) FROM Product_Characteristics AS T1 INNER JOIN
+[60/100] entertainment_awards: SELECT T1.Name AS Artwork_Name, T2.Festival_Name FROM nomination AS T1 JOIN fest
+[61/100] medicine_enzyme_interaction: SELECT T1.product, T1.chromosome, T1.porphyria FROM enzyme AS T1 INNER JOIN medi
+[62/100] chinook_1: SELECT T1.Title AS AlbumName, T1.AlbumId, COUNT(T2.TrackId) AS NumberOfTracks FR
+[63/100] college_1: SELECT T1.emp_fname FROM professor AS T1 JOIN class AS T2 ON T1.emp_num = T2.pro
+[64/100] music_2: SELECT COUNT(DISTINCT T1.Instrument) FROM Instruments AS T1 INNER JOIN Band AS T
+[65/100] soccer_2: SELECT SUM(enr) FROM College WHERE cName NOT IN (SELECT DISTINCT T1.cName FROM T
+[66/100] climbing: SELECT Name FROM mountain ORDER BY Name ASC
+[67/100] behavior_monitoring: SELECT T1.teacher_id, T1.first_name FROM Teachers AS T1 JOIN Assessment_Notes AS
+[68/100] customers_and_products_contacts: SELECT T1.state_province_county ,  COUNT(*) FROM Addresses AS T1 GROUP BY T1.sta
+[69/100] sakila_1: SELECT T1.first_name FROM customer AS T1 JOIN rental AS T2 ON T1.customer_id = T
+[70/100] game_injury: SELECT Date FROM game WHERE Home_team = 'Home Team Name' ORDER BY Date DESC
+[71/100] swimming: SELECT T1.Result FROM record AS T1 INNER JOIN swimmer AS T2 ON T1.Swimmer_ID = T
+[72/100] hr_1: SELECT T1.SALARY, T1.MANAGER_ID FROM employees AS T1 INNER JOIN departments AS T
+[73/100] products_gen_characteristics: SELECT T3.product_name FROM Ref_Colors AS T1 INNER JOIN Products AS T2 ON T1.col
+[74/100] pilot_record: SELECT Nationality FROM pilot GROUP BY Nationality ORDER BY COUNT(*) DESC LIMIT 
+[75/100] music_4: SELECT T1.Date_of_ceremony FROM music_festival AS T1 INNER JOIN volume AS T2 ON 
+[76/100] city_record: SELECT Competition, COUNT(*) FROM match GROUP BY Competition
+[77/100] game_1: SELECT StuID FROM Student WHERE StuID NOT IN (SELECT StuID FROM Plays_Games)
+[78/100] sakila_1: SELECT f.title, f.film_id FROM film AS f JOIN inventory AS i ON f.film_id = i.fi
+[79/100] company_office: SELECT Industry FROM Companies WHERE Headquarters = 'USA' INTERSECT SELECT Indus
+[80/100] cre_Docs_and_Epenses: SELECT count(*) FROM Statements
+[81/100] customers_and_addresses: SELECT T1.customer_name, T1.order_date FROM Customer_Orders AS T1 INNER JOIN Ord
+[82/100] culture_company: SELECT Category FROM book_club WHERE Year > 1989 GROUP BY Category HAVING COUNT(
+[83/100] college_1: SELECT T1.emp_fname FROM professor AS T1 WHERE T1.emp_num NOT IN (SELECT T2.prof
+[84/100] cre_Theme_park: SELECT T2.Name FROM Photos AS T1 INNER JOIN Tourist_Attractions AS T2 ON T1.Tour
+[85/100] movie_1: SELECT name FROM Reviewer WHERE rID IN (SELECT rID FROM Rating GROUP BY rID HAVI
+[86/100] sakila_1: SELECT T1.address FROM staff AS T1 INNER JOIN address AS T2 ON T1.address_id = T
+[87/100] school_finance: SELECT T2.donator_name ,  T1.amount FROM endowment AS T1 JOIN endowment AS T2 ON
+[88/100] cinema: SELECT Name, Openning_year, Capacity FROM cinema
+[89/100] protein_institute: SELECT Name, Street_address, Floors FROM building ORDER BY Floors ASC
+[90/100] product_catalog: SELECT T1.catalog_entry_name FROM Catalog_Contents AS T1 INNER JOIN Catalog_Stru
+[91/100] train_station: SELECT T2.Name, T1.Time FROM station AS T1 INNER JOIN train_station AS T2 ON T1.
+[92/100] school_player: SELECT count(DISTINCT position) FROM player
+[93/100] customers_card_transactions: SELECT T1.customer_id, COUNT(T2.card_id) AS num_cards FROM Customers AS T1 JOIN 
+[94/100] insurance_fnol: SELECT Service_name FROM Services ORDER BY Service_name
+[95/100] college_2: SELECT DISTINCT T1.ID FROM teaches AS T1 INNER JOIN section AS T2 ON T1.course_i
+[96/100] insurance_and_eClaims: SELECT T1.Customer_Details FROM Customers AS T1 INNER JOIN Policies AS T2 ON T1.
+[97/100] flight_1: SELECT T1.name FROM aircraft AS T1 JOIN certificate AS T2 ON T1.aid = T2.aid GRO
+[98/100] flight_company: SELECT name FROM airport WHERE name LIKE '%international%'
+[99/100] city_record: SELECT T1.City FROM city AS T1 JOIN hosting_city AS T2 ON T1.City_ID = T2.Host_C
+[100/100] ship_mission: SELECT TYPE FROM ship WHERE TONNAGE > 6000 INTERSECT SELECT TYPE FROM ship WHERE
+wrote reports/A_val_n100_v2.jsonl in 91s, peak VRAM 1.34 GiB
+{
+  "n": 100,
+  "scored": 100,
+  "skipped": 0,
+  "accuracy": 0.51,
+  "exact_match": 0.23,
+  "by_difficulty": {},
+  "pred_errors": {
+    "no_such_column": 22,
+    "no_such_table": 1
+  }
+}
+wrote reports/eval_A_val_n100_v2.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]Loading weights:   0%|          | 1/338 [00:00<01:09,  4.85it/s]Loading weights:   5%|▌         | 17/338 [00:00<00:04, 68.23it/s]Loading weights:  12%|█▏        | 41/338 [00:00<00:02, 127.24it/s]Loading weights:  22%|██▏       | 75/338 [00:00<00:01, 192.07it/s]Loading weights:  30%|██▉       | 101/338 [00:00<00:01, 210.30it/s]Loading weights:  40%|███▉      | 135/338 [00:00<00:00, 249.70it/s]Loading weights:  49%|████▉     | 165/338 [00:00<00:00, 263.56it/s]Loading weights:  58%|█████▊    | 195/338 [00:00<00:00, 271.47it/s]Loading weights:  66%|██████▌   | 223/338 [00:01<00:00, 260.07it/s]Loading weights:  75%|███████▌  | 255/338 [00:01<00:00, 273.62it/s]Loading weights:  84%|████████▎ | 283/338 [00:01<00:00, 272.02it/s]Loading weights:  93%|█████████▎| 315/338 [00:01<00:00, 280.90it/s]Loading weights: 100%|██████████| 338/338 [00:01<00:00, 235.25it/s]
+[1/100] hospital_1: SELECT DISTINCT name FROM medication ORDER BY name
+[2/100] club_1: SELECT avg(t3.age) FROM club AS t1 JOIN member_of_club AS t2 ON t1.clubid  =  t2
+[3/100] flight_1: SELECT T1.name FROM Employee AS T1 JOIN Certificate AS T2 ON T1.eid  =  T2.eid G
+[4/100] party_host: SELECT T3.Location FROM party_host AS T1 JOIN HOST AS T2 ON T1.Host_ID  =  T2.Ho
+[5/100] music_2: SELECT count(*) FROM vocals AS T1 JOIN songs AS T2 ON T1.songid  =  T2.songid WH
+[6/100] soccer_2: SELECT DISTINCT state FROM college AS T1 JOIN tryout AS T2 ON T1.cName  =  T2.cN
+[7/100] film_rank: SELECT title ,  director FROM film WHERE Film_id NOT IN ( SELECT Film_ID FROM fi
+[8/100] behavior_monitoring: SELECT last_name FROM Teachers EXCEPT SELECT T1.last_name FROM Teachers AS T1 JO
+[9/100] school_player: SELECT Denomination ,  COUNT(*) FROM school GROUP BY Denomination ORDER BY COUNT
+[10/100] baseball_1: SELECT T2.name ,  T1.team_id FROM postseason AS T1 JOIN team AS T2 ON T1.team_id
+[11/100] game_1: SELECT StuID FROM Student WHERE Advisor  =  1121
+[12/100] machine_repair: SELECT Team FROM technician GROUP BY Team HAVING COUNT(*)  >=  2
+[13/100] music_2: SELECT DISTINCT label FROM albums
+[14/100] college_2: SELECT T1.title FROM course AS T1 JOIN SECTION AS T2 ON T1.course_id  =  T2.cour
+[15/100] icfp_1: SELECT title FROM papers WHERE title LIKE "%ML%"
+[16/100] college_2: SELECT T2.name ,  T2.salary FROM advisor AS T1 JOIN instructor AS T2 ON T1.i_id 
+[17/100] university_basketball: SELECT t2.Primary_conference FROM university AS t1 JOIN basketball_match AS t2 O
+[18/100] e_government: SELECT t1.organization_name FROM organizations AS t1 JOIN organization_contact_i
+[19/100] inn_1: SELECT sum(beds) FROM Rooms WHERE bedtype  =  'King'
+[20/100] voter_2: SELECT avg(T1.Age) FROM STUDENT AS T1 JOIN VOTING_RECORD AS T2 ON T1.StuID  =  S
+[21/100] music_4: SELECT Date_of_ceremony FROM music_festival WHERE Category  =  "Best Song" AND R
+[22/100] insurance_and_eClaims: SELECT DISTINCT t3.policy_type_code FROM customers AS t1 JOIN policies AS t2 ON 
+[23/100] college_1: SELECT crs_credit ,  crs_description FROM course WHERE crs_code  =  'QM-261'
+[24/100] university_basketball: SELECT affiliation ,  count(*) FROM university WHERE enrollment  >  20000 GROUP 
+[25/100] race_track: SELECT name ,  LOCATION ,  seating FROM track ORDER BY year_opened DESC LIMIT 1
+[26/100] manufacturer: SELECT t1.name FROM furniture AS t1 JOIN furniture_manufacte AS t2 ON t1.Furnitu
+[27/100] local_govt_and_lot: SELECT T1.date_moved_in ,  T2.customer_id ,  T2.customer_details FROM Customer_E
+[28/100] dorm_1: SELECT count(*) ,  sex FROM student WHERE age  >  ( SELECT avg(age) FROM student
+[29/100] phone_1: SELECT T2.Hardware_Model_name ,  T2.Company_name FROM screen_mode AS T1 JOIN pho
+[30/100] baseball_1: SELECT count(*) FROM park WHERE state  =  'NY'
+[31/100] network_2: SELECT T1.name FROM Person AS T1 JOIN PersonFriend AS T2 ON T1.name  =  T2.frien
+[32/100] college_1: SELECT count(*) FROM employee
+[33/100] ship_1: SELECT name ,  CLASS FROM ship WHERE ship_id NOT IN (SELECT ship_id FROM captain
+[34/100] wine_1: SELECT T1.Color FROM GRAPES AS T1 JOIN WINE AS T2 ON T1.Grape  =  T2.Grape GROUP
+[35/100] cre_Doc_Control_Systems: SELECT T1.role_description ,  count(*) FROM ROLES AS T1 JOIN Employees AS T2 ON 
+[36/100] customers_and_products_contacts: SELECT min(product_price) ,  max(product_price) ,  avg(product_price) FROM produ
+[37/100] tracking_orders: SELECT T1.order_id FROM orders AS T1 JOIN shipments AS T2 ON T1.order_id = T2.or
+[38/100] company_office: SELECT Stories FROM buildings ORDER BY Height DESC LIMIT 1
+[39/100] manufactory_1: SELECT avg(T1.price) ,  T2.name FROM products AS T1 JOIN manufacturers AS T2 ON 
+[40/100] party_host: SELECT Name FROM HOST WHERE Host_ID NOT IN (SELECT Host_ID FROM party_host)
+[41/100] store_1: SELECT T2.name FROM genres AS T1 JOIN tracks AS T2 ON T1.id = T2.genre_id WHERE 
+[42/100] swimming: SELECT t1.name ,  t1.nationality FROM swimmer AS t1 JOIN record AS t2 ON t1.id  
+[43/100] bike_1: SELECT avg(bikes_available) FROM status WHERE station_id NOT IN ( SELECT id FROM
+[44/100] medicine_enzyme_interaction: SELECT T1.name FROM enzyme AS T1 JOIN medicine_enzyme_interaction AS T2 ON T1.id
+[45/100] company_employee: SELECT Headquarters ,  Industry FROM company
+[46/100] cre_Docs_and_Epenses: SELECT document_type_code ,  document_name ,  document_description FROM Document
+[47/100] department_management: SELECT head_id ,  name FROM head WHERE name LIKE '%Ha%'
+[48/100] ship_1: SELECT t1.name FROM ship AS t1 JOIN captain AS t2 ON t1.ship_id  =  t2.ship_id W
+[49/100] device: SELECT Shop_Name FROM shop ORDER BY Open_Year ASC
+[50/100] hr_1: SELECT * FROM employees WHERE hire_date  <  '2002-06-21'
+[51/100] movie_1: SELECT T1.title ,  T1.year FROM Movie AS T1 JOIN Movie AS T2 ON T1.director  =  
+[52/100] sports_competition: SELECT name FROM club ORDER BY name DESC
+[53/100] store_1: SELECT T2.name FROM genres AS T1 JOIN tracks AS T2 ON T1.id = T2.genre_id JOIN m
+[54/100] cinema: SELECT LOCATION FROM cinema WHERE capacity  >  300 GROUP BY LOCATION HAVING coun
+[55/100] workshop_paper: SELECT T2.Author ,  T1.Result FROM acceptance AS T1 JOIN submission AS T2 ON T1.
+[56/100] entrepreneur: SELECT T2.Name FROM entrepreneur AS T1 JOIN people AS T2 ON T1.People_ID  =  T2.
+[57/100] movie_1: SELECT T2.director ,  T1.title FROM Rating AS T1 JOIN Movie AS T2 ON T1.mID  =  
+[58/100] college_2: SELECT count(*) ,  avg(T1.salary) FROM instructor AS T1 JOIN department AS T2 ON
+[59/100] products_gen_characteristics: SELECT count(*) FROM products AS t1 JOIN product_characteristics AS t2 ON t1.pro
+[60/100] entertainment_awards: SELECT T2.Name ,  T3.Festival_Name FROM nomination AS T1 JOIN artwork AS T2 ON T
+[61/100] medicine_enzyme_interaction: SELECT product ,  chromosome ,  porphyria FROM enzyme WHERE LOCATION  =  'Cytoso
+[62/100] chinook_1: SELECT T1.Title ,  T2.AlbumID ,  COUNT(*) FROM ALBUM AS T1 JOIN TRACK AS T2 ON T
+[63/100] college_1: SELECT T1.emp_fname ,  T3.crs_description FROM employee AS T1 JOIN CLASS AS T2 O
+[64/100] music_2: SELECT count(DISTINCT instrument) FROM instruments AS T1 JOIN Band AS T2 ON T1.b
+[65/100] soccer_2: SELECT sum(enr) FROM college WHERE cName NOT IN ( SELECT cName FROM tryout WHERE
+[66/100] climbing: SELECT Name FROM mountain ORDER BY Name ASC
+[67/100] behavior_monitoring: SELECT T1.teacher_id ,  T2.first_name FROM Assessment_Notes AS T1 JOIN Teachers 
+[68/100] customers_and_products_contacts: SELECT state_province_county ,  count(*) FROM addresses GROUP BY state_province_
+[69/100] sakila_1: SELECT first_name FROM customer WHERE customer_id NOT IN (SELECT customer_id FRO
+[70/100] game_injury: SELECT date FROM game ORDER BY home_team DESC
+[71/100] swimming: SELECT meter_200 ,  meter_300 FROM swimmer WHERE nationality  =  'Australia'
+[72/100] hr_1: SELECT salary ,  manager_id FROM employees WHERE manager_id != "null"
+[73/100] products_gen_characteristics: SELECT t1.product_name FROM products AS t1 JOIN ref_colors AS t2 ON t1.color_cod
+[74/100] pilot_record: SELECT Nationality FROM pilot GROUP BY Nationality ORDER BY COUNT(*) DESC LIMIT 
+[75/100] music_4: SELECT Date_of_ceremony FROM music_festival WHERE Category  =  "Best Song" AND R
+[76/100] city_record: SELECT count(*) ,  Competition FROM MATCH GROUP BY Competition
+[77/100] game_1: SELECT StuID FROM Student EXCEPT SELECT StuID FROM Plays_games
+[78/100] sakila_1: SELECT T1.title ,  T1.film_id FROM film AS T1 JOIN inventory AS T2 ON T1.film_id
+[79/100] company_office: SELECT Industry FROM Companies WHERE Headquarters  =  "USA" INTERSECT SELECT Ind
+[80/100] cre_Docs_and_Epenses: SELECT count(*) FROM Statements
+[81/100] customers_and_addresses: SELECT t1.customer_name ,  t2.order_date FROM customers AS t1 JOIN customer_orde
+[82/100] culture_company: SELECT category FROM book_club WHERE YEAR  >  1989 GROUP BY category HAVING coun
+[83/100] college_1: SELECT emp_fname FROM employee EXCEPT SELECT T1.emp_fname FROM employee AS T1 JO
+[84/100] cre_Theme_park: SELECT T2.Name FROM PHOTOS AS T1 JOIN TOURIST_ATTRACTIONS AS T2 ON T1.Tourist_At
+[85/100] movie_1: SELECT T2.name FROM Rating AS T1 JOIN Reviewer AS T2 ON T1.rID  =  T2.rID GROUP 
+[86/100] sakila_1: SELECT T2.address FROM staff AS T1 JOIN address AS T2 ON T1.address_id  =  T2.ad
+[87/100] school_finance: SELECT donator_name ,  sum(amount) FROM endowment GROUP BY donator_name ORDER BY
+[88/100] cinema: SELECT name ,  openning_year ,  capacity FROM cinema
+[89/100] protein_institute: SELECT name ,  street_address ,  floors FROM building ORDER BY floors
+[90/100] product_catalog: SELECT catalog_entry_name FROM Catalog_Contents WHERE LENGTH  <  3 OR LENGTH  > 
+[91/100] train_station: SELECT T3.name ,  T3.time FROM station AS T1 JOIN train_station AS T2 ON T1.stat
+[92/100] school_player: SELECT count(DISTINCT POSITION) FROM player
+[93/100] customers_card_transactions: SELECT T1.customer_id ,  count(*) FROM Customers_cards AS T1 JOIN Customers AS T
+[94/100] insurance_fnol: SELECT service_name FROM services ORDER BY service_name
+[95/100] college_2: SELECT id FROM teaches WHERE semester  =  'Fall' AND YEAR  =  2009 EXCEPT SELECT
+[96/100] insurance_and_eClaims: SELECT DISTINCT t1.customer_details FROM customers AS t1 JOIN policies AS t2 ON 
+[97/100] flight_1: SELECT T2.name FROM Certificate AS T1 JOIN Aircraft AS T2 ON T1.aid  =  T2.aid G
+[98/100] flight_company: SELECT name FROM airport WHERE name LIKE '%international%'
+[99/100] city_record: SELECT T1.city FROM city AS T1 JOIN temperature AS T2 ON T1.city_id  =  T2.city_
+[100/100] ship_mission: SELECT TYPE FROM ship WHERE Tonnage  >  6000 INTERSECT SELECT TYPE FROM ship WHE
+wrote reports/B_val_n100_v2.jsonl in 165s, peak VRAM 1.53 GiB
+{
+  "n": 100,
+  "scored": 100,
+  "skipped": 0,
+  "accuracy": 0.81,
+  "exact_match": 0.7,
+  "by_difficulty": {},
+  "pred_errors": {
+    "no_such_column": 4
+  }
+}
+wrote reports/eval_B_val_n100_v2.json
+REBASELINE_DONE

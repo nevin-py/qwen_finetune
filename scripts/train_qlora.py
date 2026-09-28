@@ -38,11 +38,27 @@ TARGET_MODULES = ["q_proj", "k_proj", "v_proj", "o_proj",
 
 
 class VramLogger(TrainerCallback):
-    """Log peak VRAM alongside loss."""
+    """Log peak VRAM alongside loss and append fixed-column CSV curves
+    (train_log.csv in the run dir — transformers 5.x dropped CSV support)."""
+
+    COLUMNS = ("step", "loss", "lr", "grad_norm", "eval_loss",
+               "val_exec_acc", "peak_vram_gb")
 
     def on_log(self, args, state, control, logs=None, **kwargs):
-        if logs is not None and torch.cuda.is_available():
+        if not logs:
+            return
+        if torch.cuda.is_available():
             logs["peak_vram_gb"] = round(torch.cuda.max_memory_allocated() / 2**30, 3)
+        row = {k: logs.get(k, "") for k in self.COLUMNS}
+        if not any(row[k] != "" for k in self.COLUMNS if k != "step"):
+            return
+        row["step"] = state.global_step
+        path = Path(args.output_dir) / "train_log.csv"
+        new = not path.exists()
+        with path.open("a") as fh:
+            if new:
+                fh.write(",".join(self.COLUMNS) + "\n")
+            fh.write(",".join(str(row[k]) for k in self.COLUMNS) + "\n")
 
 
 class ValProbe(TrainerCallback):
@@ -63,6 +79,7 @@ class ValProbe(TrainerCallback):
         self.out_dir = out_dir
         self.best_dir = out_dir / "adapter_best"
         self.model = None  # set after trainer construction
+        self.trainer = None
         self.schema_cache: dict[str, str] = {}
         self.history: list[dict] = []
         self.best_acc = -1.0
@@ -104,6 +121,8 @@ class ValProbe(TrainerCallback):
         if metrics and "eval_loss" in metrics:
             row["val_loss"] = round(metrics["eval_loss"], 4)
         self.history.append(row)
+        if self.trainer is not None:
+            self.trainer.log({"val_exec_acc": row["val_exec_acc"]})
         print(f"[probe] step {state.global_step}: val_exec_acc={acc:.3f} "
               f"(n={n_scored}) {row}", flush=True)
         if acc > self.best_acc:
@@ -220,7 +239,7 @@ def main() -> None:
         save_total_limit=3,
         seed=args.seed,
         bf16=True,
-        report_to=["csv"],
+        report_to=[],   # curves go to train_log.csv via VramLogger
     )
     probe = ValProbe(tokenizer, val_raw, ROOT / "data" / "spider" / "database",
                      args.exec_eval_n if val_messages else 0, out_dir)
@@ -233,6 +252,7 @@ def main() -> None:
         callbacks=[VramLogger(), probe],
     )
     probe.model = trainer.model
+    probe.trainer = trainer
 
     resume_ckpt = None
     if args.resume:
