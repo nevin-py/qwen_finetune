@@ -68,6 +68,21 @@ Everything below uses the **validation split** (official dev stays locked).
 |---|---|---|---|
 | 47.0% | 74.0% | 79.0% | **80.0%** |
 
+## Phase 9: SParC multi-turn (422 dialogues, 1203 turns, eval-only, gold history)
+
+| Cell | Turn acc | turn 1/2/3/4 | Interaction acc | Avg progress |
+|---|---|---|---|---|
+| A (base) | 56.1% | 62.6/59.0/47.8/37.5 | — | — |
+| B (+QLoRA) | **61.3%** | 71.1/60.7/51.1/48.9 | 33.4% | 62.8% |
+
+- Paired per-turn A→B: **+135 improvements / −73 regressions**, exact McNemar p = 2.05e-05
+- Query consistency (QC, official = per-turn acc under gold history): A 56.1% / B 61.3%
+- Turn-accuracy declines with turn depth in both cells (later turns are harder follow-ups;
+  history is gold, so this is NOT error propagation)
+- Gold isolation: runners read `dev_prompts.json` (history of previous turns only);
+  current-turn gold lives in `dev_gold.json`, eval-only (tested)
+- Artifacts: `reports/sparc_{A,B}_dev.jsonl`, `reports/eval_sparc_{A,B}_dev.json`
+
 ## Baseline context (earlier gates)
 
 - A on n=20 val (Phase 4/5): 50.0% — official-evaluator agreement: **100%** (M2)

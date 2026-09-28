@@ -12,6 +12,7 @@ import json
 from pathlib import Path
 
 from t2sql.eval.harness import evaluate
+from t2sql.eval.sparc import sparc_metrics
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -20,6 +21,9 @@ def resolve_split(dataset: str, split: str) -> tuple[list[dict], Path]:
     if dataset == "bird":
         return (json.loads((ROOT / "data" / "bird" / "dev.json").read_text()),
                 ROOT / "data" / "bird" / "databases")
+    if dataset == "sparc":
+        return (json.loads((ROOT / "data" / "sparc" / "dev_gold.json").read_text()),
+                ROOT / "data" / "spider" / "database")
     path = ROOT / "data" / "splits" / f"{split}.json"
     if not path.exists():
         path = ROOT / "data" / "spider" / f"{split}.json"
@@ -29,7 +33,7 @@ def resolve_split(dataset: str, split: str) -> tuple[list[dict], Path]:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--preds", required=True)
-    ap.add_argument("--dataset", default="spider", choices=["spider", "bird"])
+    ap.add_argument("--dataset", default="spider", choices=["spider", "bird", "sparc"])
     ap.add_argument("--split", default="val")
     args = ap.parse_args()
 
@@ -38,9 +42,12 @@ def main() -> None:
     items, db_dir = resolve_split(args.dataset, args.split)
 
     report = evaluate(items, predictions, db_dir)
+    out = report.to_json()
+    if args.dataset == "sparc":
+        out["conversation"] = sparc_metrics(report.results, items)
     out_path = ROOT / "reports" / f"eval_{preds_path.stem}.json"
-    out_path.write_text(json.dumps(report.to_json(), indent=2))
-    print(json.dumps(report.to_json(), indent=2))
+    out_path.write_text(json.dumps(out, indent=2))
+    print(json.dumps(out, indent=2))
     print(f"wrote {out_path.relative_to(ROOT)}")
 
 

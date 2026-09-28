@@ -36,6 +36,30 @@ def build_messages(
     ]
 
 
+def build_dialogue_messages(
+    question: str,
+    schema: str,
+    history: list[dict[str, str]],
+) -> list[dict[str, str]]:
+    """Chat messages for a multi-turn SParC question.
+
+    ``history`` holds GOLD (utterance, query) pairs of *previous* turns only —
+    the official SParC protocol conditions on gold dialogue context; the
+    current turn's gold SQL never appears here.
+    """
+    if history:
+        lines = ["Dialogue so far:"]
+        for h in history:
+            lines += [f"Q: {h['utterance']}", f"SQL: {h['query']}"]
+        user = "\n".join(lines) + f"\nQ: {question}"
+    else:
+        user = question
+    return [
+        {"role": "system", "content": _system(schema)},
+        {"role": "user", "content": user},
+    ]
+
+
 def build_repair_messages(
     question: str,
     schema: str,

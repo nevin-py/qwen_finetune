@@ -1,0 +1,30 @@
+{
+  "n": 1203,
+  "scored": 1202,
+  "skipped": 1,
+  "accuracy": 0.5616,
+  "by_difficulty": {},
+  "pred_errors": {
+    "no_such_column": 117,
+    "operational": 17,
+    "no_such_table": 5,
+    "syntax": 3,
+    "no_such_function": 1,
+    "ambiguous_column": 1
+  },
+  "conversation": {
+    "turns_scored": 1203,
+    "turn_accuracy": 0.5611,
+    "query_consistency": 0.5611,
+    "per_turn_accuracy": {
+      "1": 0.6256,
+      "2": 0.59,
+      "3": 0.4778,
+      "4": 0.375,
+      ">4": 0.0
+    },
+    "interaction_accuracy": 0.2749,
+    "average_progress": 0.5761,
+    "n_dialogues": 422
+  }
+}

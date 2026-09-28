@@ -1,0 +1,27 @@
+{
+  "n": 1203,
+  "scored": 1202,
+  "skipped": 1,
+  "accuracy": 0.6131,
+  "by_difficulty": {},
+  "pred_errors": {
+    "operational": 9,
+    "no_such_column": 63,
+    "no_such_table": 3
+  },
+  "conversation": {
+    "turns_scored": 1203,
+    "turn_accuracy": 0.6126,
+    "query_consistency": 0.6126,
+    "per_turn_accuracy": {
+      "1": 0.7109,
+      "2": 0.6066,
+      "3": 0.5111,
+      "4": 0.4886,
+      ">4": 0.0
+    },
+    "interaction_accuracy": 0.3341,
+    "average_progress": 0.6281,
+    "n_dialogues": 422
+  }
+}
