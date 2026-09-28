@@ -3,12 +3,22 @@ name = "qwen-finetune"
 version = "0.1.0"
 description = "Text-to-SQL fine-tuning, execution-based verification, and bounded repair"
 requires-python = "==3.11.*"
-# Heavy ML deps (torch, transformers, peft, trl, bitsandbytes, accelerate) are
-# intentionally NOT installed here yet: they are installed only when their phase
-# needs them, keeping the base env light. See reports/design.md §8.
 dependencies = [
-    "pyyaml>=6.0",
-    "scikit-learn>=1.4",
+    # Phase 2 — data acquisition (scripts/download_data.py)
+    "gdown>=6.4",
+    # Phase 4 — ML stack: training loop + 4-bit inference
+    "torch>=2.14",
+    "transformers>=5.17",
+    "accelerate>=1.15",
+    "bitsandbytes>=0.50",
+    # Phase 5 — official-evaluator fidelity (DISTINCT stripping via sqlparse)
+    "sqlparse>=0.6",
+    # Phase 6 — QLoRA: trainer + adapter layers
+    "trl>=1.14",
+    "peft>=0.21",
+    "datasets>=5.0",
+    # Phase 11 — figures (objective §23)
+    "matplotlib>=3.11",
 ]
 
 [project.optional-dependencies]
