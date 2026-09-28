@@ -12,14 +12,17 @@ TAU=3.0
 
 for ds in spider bird; do
   echo "=== [$ds] A: base + greedy ==="
-  $PY scripts/run_baseline.py --dataset $ds --split dev --n 0 \
-      --out reports/${ds}_A_dev.jsonl
+  [ -f reports/${ds}_A_dev.jsonl ] || \
+    $PY scripts/run_baseline.py --dataset $ds --split dev --n 0 \
+        --out reports/${ds}_A_dev.jsonl
 
   echo "=== [$ds] C: verifier over k=$K candidates ==="
-  $PY scripts/run_verify.py --dataset $ds --split dev --n 0 --k $K \
-      --adapter $ADAPTER --out reports/${ds}_C_dev.jsonl
+  [ -f reports/${ds}_C_dev.jsonl ] || \
+    $PY scripts/run_verify.py --dataset $ds --split dev --n 0 --k $K \
+        --adapter $ADAPTER --out reports/${ds}_C_dev.jsonl
 
   echo "=== [$ds] B: greedy slot extracted from C candidates ==="
+  [ -f reports/${ds}_B_dev.jsonl ] || \
   $PY -c "
 import json, pathlib
 src = pathlib.Path('reports/${ds}_C_dev.jsonl')
@@ -35,12 +38,14 @@ print('wrote', dst)
 "
 
   echo "=== [$ds] D: bounded repair (tau=$TAU) ==="
-  $PY scripts/run_repair.py --dataset $ds --cfile reports/${ds}_C_dev.jsonl \
-      --tau $TAU --adapter $ADAPTER --out reports/${ds}_D_dev.jsonl
+  [ -f reports/${ds}_D_dev.jsonl ] || \
+    $PY scripts/run_repair.py --dataset $ds --cfile reports/${ds}_C_dev.jsonl \
+        --tau $TAU --adapter $ADAPTER --out reports/${ds}_D_dev.jsonl
 
   echo "=== [$ds] evaluate A/B/C/D ==="
   for cell in A B C D; do
-    $PY scripts/run_eval.py --dataset $ds --preds reports/${ds}_${cell}_dev.jsonl
+    $PY scripts/run_eval.py --dataset $ds --split dev \
+        --preds reports/${ds}_${cell}_dev.jsonl
   done
 done
 echo "=== Phase 10 complete ==="

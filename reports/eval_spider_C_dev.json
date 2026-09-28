@@ -1,0 +1,12 @@
+{
+  "n": 1034,
+  "scored": 1032,
+  "skipped": 2,
+  "accuracy": 0.7035,
+  "exact_match": 0.5058,
+  "by_difficulty": {},
+  "pred_errors": {
+    "no_such_column": 49,
+    "operational": 3
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "n": 1534,
+  "scored": 1532,
+  "skipped": 2,
+  "accuracy": 0.2742,
+  "exact_match": 0.0176,
+  "by_difficulty": {
+    "challenging": 0.0625,
+    "moderate": 0.1274,
+    "simple": 0.3805
+  },
+  "pred_errors": {
+    "syntax": 70,
+    "no_such_column": 397,
+    "no_such_function": 39,
+    "operational": 15,
+    "no_such_table": 10,
+    "ambiguous_column": 5,
+    "timeout": 1
+  }
+}
