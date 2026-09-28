@@ -55,18 +55,21 @@ class LLM:
         messages: list[dict[str, str]],
         *,
         max_new_tokens: int = 256,
+        do_sample: bool = False,
+        temperature: float = 1.0,
     ) -> str:
         prompt = self.tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
+        gen_kwargs: dict = {"max_new_tokens": max_new_tokens,
+                           "pad_token_id": self.tokenizer.eos_token_id}
+        if do_sample:
+            gen_kwargs.update(do_sample=True, temperature=temperature)
+        else:
+            gen_kwargs["do_sample"] = False
         with torch.no_grad():
-            out = self.model.generate(
-                **inputs,
-                max_new_tokens=max_new_tokens,
-                do_sample=False,
-                pad_token_id=self.tokenizer.eos_token_id,
-            )
+            out = self.model.generate(**inputs, **gen_kwargs)
         return self.tokenizer.decode(
             out[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True
         )

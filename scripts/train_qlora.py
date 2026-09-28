@@ -40,7 +40,8 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--epochs", type=float, default=2.0)
     ap.add_argument("--lr", type=float, default=2e-4)
     ap.add_argument("--accum", type=int, default=4)
-    ap.add_argument("--max-len", type=int, default=1024)
+    ap.add_argument("--max-len", type=int, default=2048,
+                    help="covers 98.8% of examples (p95=1372, max=2352 tokens)")
     ap.add_argument("--seed", type=int, default=13)
     ap.add_argument("--limit", type=int, default=0, help="debug: first N examples")
     ap.add_argument("--max-steps", type=int, default=0, help="debug: override schedule")
@@ -81,7 +82,7 @@ def main() -> None:
     conf = SFTConfig(
         output_dir=str(out_dir),
         num_train_epochs=args.epochs,
-        max_steps=args.max_steps,
+        max_steps=args.max_steps if args.max_steps > 0 else -1,
         per_device_train_batch_size=1,
         gradient_accumulation_steps=args.accum,
         learning_rate=args.lr,

@@ -43,8 +43,9 @@ def main() -> None:
     idxs = random.Random(args.seed).sample(range(len(items)), min(args.n, len(items)))
     sample = [(i, items[i]) for i in idxs]
 
-    out_path = Path(args.out) if args.out else \
-        ROOT / "reports" / f"baseline_{args.split}_n{len(sample)}.jsonl"    llm = LLM(args.model, quantize=not args.fp16, adapter=args.adapter)
+    out_path = Path(args.out).resolve() if args.out else \
+        ROOT / "reports" / f"baseline_{args.split}_n{len(sample)}.jsonl"
+    llm = LLM(args.model, quantize=not args.fp16, adapter=args.adapter)
     schema_cache: dict[str, str] = {}
     t_start = time.time()
     with out_path.open("w") as fh:
