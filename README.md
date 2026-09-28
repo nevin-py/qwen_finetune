@@ -17,9 +17,9 @@ Spider and BIRD under the benchmarks' own **execution-accuracy** methodology
 | D | C + bounded repair (≤2 rounds) | **70.8%** | **31.5%** |
 
 All three gates (B≥A, C≥B, D≥C) hold on **both** locked tests. Fine-tuning
-contributes the largest gain (McNemar p < 1e-6 on Spider, p = 4e-8 on BIRD);
-the verifier adds 2.8/3.0 points with significant paired improvement; repair
-adds 0.5 (n.s.) on Spider and 1.1 (p = 7.6e-5) on BIRD. Multi-turn SParC
+contributes the largest gain (exact McNemar p < 5e-7 on both — stored rounded
+to 6 dp, so the JSON reads 0.0); the verifier adds 2.8/3.0 points (p < 5e-7);
+repair adds 0.5 (n.s., p = 0.125) on Spider and 1.1 (p = 7.6e-5) on BIRD. Multi-turn SParC
 (eval-only): 56.1% → 61.3% turn accuracy A→B. Full statistics, CIs, failure
 taxonomy, and ablations: `results/analysis_report.md`, `reports/results.md`.
 

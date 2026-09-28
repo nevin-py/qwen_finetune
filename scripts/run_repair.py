@@ -25,6 +25,62 @@ from t2sql.verifier.features import extract_features, result_signature
 from t2sql.verifier.scorer import score
 
 
+def repair_item(llm, sandbox, schema: str, rec: dict, *, max_iterations: int,
+                max_new_tokens: int = 256) -> tuple[int, int]:
+    """Bounded repair loop for one flagged record (cell D).
+
+    Mutates ``rec`` in place (``repairs`` log, and on replacement
+    ``prediction``/``verifier_score``). The verifier score is the sole judge:
+    a repair replaces the current best only with a strictly higher score;
+    an identical regeneration stops the loop. Returns (attempts, replacements).
+    """
+    best = max(rec["candidates"], key=lambda c: c["score"])
+    rec["repairs"] = []
+    k = len(rec["candidates"])
+    sig_counts: dict[str, int] = {}
+    for c in rec["candidates"]:
+        if c["result_sig"]:
+            sig_counts[c["result_sig"]] = sig_counts.get(c["result_sig"], 0) + 1
+
+    cur = {"sql": rec["prediction"], "score": rec["verifier_score"],
+           "consistency": best["consistency"]}
+    attempts = replaced = 0
+    for _ in range(max_iterations):
+        res = sandbox.execute(cur["sql"])
+        feats_cur = extract_features(
+            rec["question"], cur["sql"], executed=res.ok, error=res.error,
+            columns=res.columns, rows=res.rows,
+            duration_ms=res.duration_ms, consistency=cur["consistency"])
+        feedback = build_feedback(feats_cur, res.error_message)
+        new_sql = extract_sql(llm.generate(
+            build_repair_messages(full_question(rec), schema, cur["sql"], feedback),
+            max_new_tokens=max_new_tokens))
+        if new_sql == cur["sql"]:
+            break  # loop guard: no progress
+        res_new = sandbox.execute(new_sql)
+        sig_new = result_signature(res_new.columns, res_new.rows) if res_new.ok else None
+        feats_new = extract_features(
+            rec["question"], new_sql, executed=res_new.ok, error=res_new.error,
+            columns=res_new.columns, rows=res_new.rows,
+            duration_ms=res_new.duration_ms,
+            consistency=((sig_counts.get(sig_new, 0) + 1) / (k + 1)) if res_new.ok else 0.0)
+        new_score = score(feats_new)
+        is_better = new_score > cur["score"]
+        rec["repairs"].append({
+            "sql": new_sql, "score": round(new_score, 4),
+            "executed": res_new.ok, "error": res_new.error,
+            "feedback": feedback, "replaced": is_better,
+        })
+        attempts += 1
+        if is_better:
+            cur = {"sql": new_sql, "score": new_score,
+                   "consistency": feats_new["consistency"]}
+            replaced += 1
+    rec["prediction"] = cur["sql"]
+    rec["verifier_score"] = round(cur["score"], 4)
+    return attempts, replaced
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--model", default="Qwen/Qwen2.5-Coder-1.5B-Instruct")
@@ -53,53 +109,15 @@ def main() -> None:
                 schema_cache[db_id] = schema_text(f)
                 sandboxes[db_id] = Sandbox(f)
 
-            best = max(rec["candidates"], key=lambda c: c["score"])
             rec["flagged"] = rec["verifier_score"] < args.tau
             rec["repairs"] = []
             if rec["flagged"]:
                 n_flagged += 1
-                k = len(rec["candidates"])
-                sig_counts: dict[str, int] = {}
-                for c in rec["candidates"]:
-                    if c["result_sig"]:
-                        sig_counts[c["result_sig"]] = sig_counts.get(c["result_sig"], 0) + 1
-
-                cur = {"sql": rec["prediction"], "score": rec["verifier_score"],
-                       "consistency": best["consistency"]}
-                for _ in range(args.max_iterations):
-                    res = sandboxes[db_id].execute(cur["sql"])
-                    feats_cur = extract_features(
-                        rec["question"], cur["sql"], executed=res.ok, error=res.error,
-                        columns=res.columns, rows=res.rows,
-                        duration_ms=res.duration_ms, consistency=cur["consistency"])
-                    feedback = build_feedback(feats_cur, res.error_message)
-                    new_sql = extract_sql(llm.generate(
-                        build_repair_messages(full_question(rec), schema_cache[db_id],
-                                              cur["sql"], feedback),
-                        max_new_tokens=args.max_new_tokens))
-                    if new_sql == cur["sql"]:
-                        break  # loop guard: no progress
-                    res_new = sandboxes[db_id].execute(new_sql)
-                    sig_new = result_signature(res_new.columns, res_new.rows) if res_new.ok else None
-                    feats_new = extract_features(
-                        rec["question"], new_sql, executed=res_new.ok, error=res_new.error,
-                        columns=res_new.columns, rows=res_new.rows,
-                        duration_ms=res_new.duration_ms,
-                        consistency=((sig_counts.get(sig_new, 0) + 1) / (k + 1)) if res_new.ok else 0.0)
-                    new_score = score(feats_new)
-                    replaced = new_score > cur["score"]
-                    rec["repairs"].append({
-                        "sql": new_sql, "score": round(new_score, 4),
-                        "executed": res_new.ok, "error": res_new.error,
-                        "feedback": feedback, "replaced": replaced,
-                    })
-                    n_attempts_total += 1
-                    if replaced:
-                        cur = {"sql": new_sql, "score": new_score,
-                               "consistency": feats_new["consistency"]}
-                        n_replaced += 1
-                rec["prediction"] = cur["sql"]
-                rec["verifier_score"] = round(cur["score"], 4)
+                a, r = repair_item(llm, sandboxes[db_id], schema_cache[db_id], rec,
+                                   max_iterations=args.max_iterations,
+                                   max_new_tokens=args.max_new_tokens)
+                n_attempts_total += a
+                n_replaced += r
 
             fh.write(json.dumps(rec) + "\n")
 
