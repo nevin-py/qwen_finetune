@@ -99,7 +99,7 @@ class ValProbe(TrainerCallback):
         preds = []
         for j, item in enumerate(self.items):
             msgs = build_messages(item["question"], self._schema(item["db_id"]))
-            ids = tok.apply_chat_template(msgs, tokenize=True, add_generation_prompt=True)
+            ids = chat_ids(tok, msgs, generation_prompt=True)
             x = torch.tensor([ids], device=model.device)
             out = model.generate(x, max_new_tokens=256, do_sample=False,
                                  pad_token_id=tok.pad_token_id)
@@ -158,11 +158,23 @@ def parse_args() -> argparse.Namespace:
     return ap.parse_args()
 
 
+def chat_ids(tokenizer, messages: list[dict], *, generation_prompt: bool) -> list[int]:
+    """apply_chat_template -> plain token list (transformers 5.x returns a
+    BatchEncoding when tokenize=True)."""
+    enc = tokenizer.apply_chat_template(messages, tokenize=True,
+                                         add_generation_prompt=generation_prompt)
+    if not isinstance(enc, list):
+        enc = enc["input_ids"]
+    if enc and isinstance(enc[0], list):
+        enc = enc[0]
+    return enc
+
+
 def check_overflow(examples: list[dict], tokenizer, max_len: int) -> int:
     """Fail fast instead of right-truncating assistant SQL into partial labels."""
     longest, over = 0, 0
     for ex in examples:
-        n = len(tokenizer.apply_chat_template(ex["messages"], tokenize=True))
+        n = len(chat_ids(tokenizer, ex["messages"], generation_prompt=False))
         longest = max(longest, n)
         if n > max_len:
             over += 1
