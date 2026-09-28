@@ -17,20 +17,20 @@ import json
 import time
 from pathlib import Path
 
+from t2sql.datasets import db_file, dataset_items, sample_indices
 from t2sql.inference.engine import LLM, extract_sql
 from t2sql.prompts.schema import schema_text
-from t2sql.prompts.template import build_messages
+from t2sql.prompts.template import build_messages, full_question
 from t2sql.sandbox.executor import Sandbox
 from t2sql.verifier.features import extract_features, result_signature
 from t2sql.verifier.scorer import score
-
-ROOT = Path(__file__).resolve().parents[1]
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--model", default="Qwen/Qwen2.5-Coder-1.5B-Instruct")
     ap.add_argument("--split", default="val", choices=["val", "train", "dev"])
+    ap.add_argument("--dataset", default="spider", choices=["spider", "bird"])
     ap.add_argument("--n", type=int, default=100)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--k", type=int, default=5, help="candidates per question")
@@ -40,13 +40,8 @@ def main() -> None:
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
 
-    import random
-
-    split_path = ROOT / "data" / "splits" / f"{args.split}.json"
-    if not split_path.exists():
-        split_path = ROOT / "data" / "spider" / f"{args.split}.json"
-    items = json.loads(split_path.read_text())
-    idxs = random.Random(args.seed).sample(range(len(items)), min(args.n, len(items)))
+    items = dataset_items(args.dataset, args.split)
+    idxs = sample_indices(args.dataset, args.split, args.n, args.seed)
 
     llm = LLM(args.model, adapter=args.adapter)
     schema_cache: dict[str, str] = {}
@@ -59,10 +54,9 @@ def main() -> None:
             item = items[i]
             db_id = item["db_id"]
             if db_id not in schema_cache:
-                db_file = ROOT / "data" / "spider" / "database" / db_id / f"{db_id}.sqlite"
-                schema_cache[db_id] = schema_text(db_file)
-                sandboxes[db_id] = Sandbox(db_file)
-            messages = build_messages(item["question"], schema_cache[db_id])
+                schema_cache[db_id] = schema_text(db_file(args.dataset, db_id))
+                sandboxes[db_id] = Sandbox(db_file(args.dataset, db_id))
+            messages = build_messages(full_question(item), schema_cache[db_id])
 
             # candidate 0 = greedy (bit-identical to cell B); rest sampled
             candidates = [llm.generate(messages, max_new_tokens=args.max_new_tokens)]
@@ -97,12 +91,15 @@ def main() -> None:
                 })
 
             best = max(range(len(records)), key=lambda j: records[j]["score"])
-            fh.write(json.dumps({
+            rec = {
                 "index": i, "db_id": db_id, "question": item["question"],
                 "prediction": executed[best][0],
                 "verifier_score": records[best]["score"],
                 "selected": best, "candidates": records,
-            }) + "\n")
+            }
+            if item.get("evidence"):
+                rec["evidence"] = item["evidence"]  # for repair prompts (input, not gold)
+            fh.write(json.dumps(rec) + "\n")
             fh.flush()
             if pos % 10 == 0:
                 print(f"[{pos}/{len(idxs)}] {time.time()-t_start:.0f}s", flush=True)

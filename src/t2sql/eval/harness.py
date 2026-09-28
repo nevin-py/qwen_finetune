@@ -25,6 +25,7 @@ class ItemResult:
     skipped: bool            # gold itself failed to execute -> excluded
     pred_error: str | None   # taxonomy class when prediction failed execution
     difficulty: str | None
+    exact_match: bool = False  # secondary metric (design §11)
 
 
 @dataclass
@@ -59,15 +60,27 @@ class EvalReport:
                 buckets.setdefault(r.difficulty, []).append(r.correct)
         return {k: sum(v) / len(v) for k, v in sorted(buckets.items())}
 
+    @property
+    def exact_match_rate(self) -> float:
+        return (sum(r.exact_match for r in self.scored) / len(self.scored)
+                if self.scored else 0.0)
+
     def to_json(self) -> dict:
         return {
             "n": self.n,
             "scored": len(self.scored),
             "skipped": self.n_skipped,
             "accuracy": round(self.accuracy, 4),
+            "exact_match": round(self.exact_match_rate, 4),
             "by_difficulty": {k: round(v, 4) for k, v in self.by_difficulty.items()},
             "pred_errors": self.error_counts,
         }
+
+
+def _norm_sql(sql: str) -> str:
+    """Normalized form for the secondary exact-match metric (design §11):
+    case-folded, whitespace-collapsed, trailing semicolon stripped."""
+    return " ".join(sql.split()).rstrip(";").strip().lower()
 
 
 def evaluate(
@@ -103,6 +116,7 @@ def evaluate(
         # official evaluator executes postprocessed + DISTINCT-stripped SQL
         gold_sql = execution.prepare(gold["query"])
         pred_sql = execution.prepare(pred["prediction"])
+        exact = _norm_sql(pred["prediction"]) == _norm_sql(gold["query"])
 
         gold_res = sb.execute(gold_sql, timeout_s=timeout_s, max_rows=max_rows)
         if not gold_res.ok:  # gold broken: question not evaluable (official behavior)
@@ -114,14 +128,17 @@ def evaluate(
         if not pred_res.ok:
             report.results.append(ItemResult(idx, correct=False, skipped=False,
                                              pred_error=pred_res.error,
-                                             difficulty=gold.get("difficulty")))
+                                             difficulty=gold.get("difficulty"),
+                                             exact_match=exact))
             continue
 
         correct = execution.compare(
             gold_sql, gold_res.rows, pred_sql, pred_res.rows
         )
         report.results.append(ItemResult(idx, correct=correct, skipped=False,
-                                         pred_error=None, difficulty=gold.get("difficulty")))
+                                         pred_error=None,
+                                         difficulty=gold.get("difficulty"),
+                                         exact_match=exact))
 
     for sb in sandboxes.values():
         sb.close()

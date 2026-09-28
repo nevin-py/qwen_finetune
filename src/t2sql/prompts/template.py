@@ -36,6 +36,15 @@ def build_messages(
     ]
 
 
+def full_question(item: dict) -> str:
+    """Model-facing question text: the benchmark question plus evidence when
+    the dataset provides it (BIRD). The eval-facing question stays
+    ``item['question']`` — predictions record that raw form."""
+    q = item["question"]
+    ev = item.get("evidence")
+    return f"{q}\nEvidence: {ev}" if ev else q
+
+
 def build_dialogue_messages(
     question: str,
     schema: str,

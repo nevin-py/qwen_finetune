@@ -15,21 +15,21 @@ import json
 import time
 from pathlib import Path
 
+from t2sql.datasets import db_file
 from t2sql.inference.engine import LLM, extract_sql
 from t2sql.prompts.schema import schema_text
-from t2sql.prompts.template import build_repair_messages
+from t2sql.prompts.template import build_repair_messages, full_question
 from t2sql.repair.feedback import build_feedback
 from t2sql.sandbox.executor import Sandbox
 from t2sql.verifier.features import extract_features, result_signature
 from t2sql.verifier.scorer import score
-
-ROOT = Path(__file__).resolve().parents[1]
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--model", default="Qwen/Qwen2.5-Coder-1.5B-Instruct")
     ap.add_argument("--cfile", required=True, help="verifier cell output (C)")
+    ap.add_argument("--dataset", default="spider", choices=["spider", "bird"])
     ap.add_argument("--tau", type=float, default=3.0,
                     help="flag items whose best score is below this")
     ap.add_argument("--max-iterations", type=int, default=2)
@@ -49,9 +49,9 @@ def main() -> None:
         for rec in records:
             db_id = rec["db_id"]
             if db_id not in schema_cache:
-                db_file = ROOT / "data" / "spider" / "database" / db_id / f"{db_id}.sqlite"
-                schema_cache[db_id] = schema_text(db_file)
-                sandboxes[db_id] = Sandbox(db_file)
+                f = db_file(args.dataset, db_id)
+                schema_cache[db_id] = schema_text(f)
+                sandboxes[db_id] = Sandbox(f)
 
             best = max(rec["candidates"], key=lambda c: c["score"])
             rec["flagged"] = rec["verifier_score"] < args.tau
@@ -74,7 +74,7 @@ def main() -> None:
                         duration_ms=res.duration_ms, consistency=cur["consistency"])
                     feedback = build_feedback(feats_cur, res.error_message)
                     new_sql = extract_sql(llm.generate(
-                        build_repair_messages(rec["question"], schema_cache[db_id],
+                        build_repair_messages(full_question(rec), schema_cache[db_id],
                                               cur["sql"], feedback),
                         max_new_tokens=args.max_new_tokens))
                     if new_sql == cur["sql"]:

@@ -19,8 +19,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def resolve_split(dataset: str, split: str) -> tuple[list[dict], Path]:
     if dataset == "bird":
-        return (json.loads((ROOT / "data" / "bird" / "dev.json").read_text()),
-                ROOT / "data" / "bird" / "databases")
+        rows = json.loads((ROOT / "data" / "bird" / "dev.json").read_text())
+        # BIRD spells gold SQL as "SQL"; normalize to the harness contract
+        items = [{"db_id": r["db_id"], "question": r["question"],
+                  "query": r["SQL"], "difficulty": r["difficulty"]}
+                 for r in rows]
+        return items, ROOT / "data" / "bird" / "databases"
     if dataset == "sparc":
         return (json.loads((ROOT / "data" / "sparc" / "dev_gold.json").read_text()),
                 ROOT / "data" / "spider" / "database")

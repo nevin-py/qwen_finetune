@@ -9,15 +9,15 @@ from __future__ import annotations
 
 import argparse
 import json
-import random
 import time
 from pathlib import Path
 
 import torch
 
+from t2sql.datasets import db_file, dataset_items, sample_indices
 from t2sql.inference.engine import LLM, extract_sql
 from t2sql.prompts.schema import schema_text
-from t2sql.prompts.template import build_messages
+from t2sql.prompts.template import build_messages, full_question
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -26,6 +26,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--model", default="Qwen/Qwen2.5-Coder-1.5B-Instruct")
     ap.add_argument("--split", default="val", choices=["val", "train", "dev"])
+    ap.add_argument("--dataset", default="spider", choices=["spider", "bird"])
     ap.add_argument("--n", type=int, default=20)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--max-new-tokens", type=int, default=256)
@@ -36,11 +37,8 @@ def main() -> None:
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
 
-    split_path = ROOT / "data" / "splits" / f"{args.split}.json"
-    if not split_path.exists():  # official dev lives outside data/splits
-        split_path = ROOT / "data" / "spider" / f"{args.split}.json"
-    items = json.loads(split_path.read_text())
-    idxs = random.Random(args.seed).sample(range(len(items)), min(args.n, len(items)))
+    items = dataset_items(args.dataset, args.split)
+    idxs = sample_indices(args.dataset, args.split, args.n, args.seed)
     sample = [(i, items[i]) for i in idxs]
 
     out_path = Path(args.out).resolve() if args.out else \
@@ -52,9 +50,8 @@ def main() -> None:
         for i, (index, item) in enumerate(sample):
             db_id = item["db_id"]
             if db_id not in schema_cache:
-                db = ROOT / "data" / "spider" / "database" / db_id / f"{db_id}.sqlite"
-                schema_cache[db_id] = schema_text(db)
-            messages = build_messages(item["question"], schema_cache[db_id])
+                schema_cache[db_id] = schema_text(db_file(args.dataset, db_id))
+            messages = build_messages(full_question(item), schema_cache[db_id])
             pred = extract_sql(llm.generate(messages, max_new_tokens=args.max_new_tokens))
             # no gold in the output file: eval joins on index and verifies the pair
             fh.write(json.dumps({"index": index, "db_id": db_id,
