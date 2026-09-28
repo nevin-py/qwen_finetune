@@ -30,6 +30,21 @@ Everything below uses the **validation split** (official dev stays locked).
 - 3114 steps × 3.5 s = **181 min**, peak VRAM **1.97 GiB**
 - Loss 0.54 → 0.094, token accuracy 99.8%
 
+## Experiment C (verifier) — same 100 val questions, k=5 candidates
+
+| Cell | Pipeline | Execution accuracy |
+|---|---|---|
+| B | QLoRA, single greedy | 74.0% |
+| C | B + k=5 (1 greedy + 4 sampled, T=0.8) + gold-free verifier selection | **79.0%** |
+
+- Paired B→C: **5 improvements, 0 regressions** (74 both-right, 21 both-wrong), exact McNemar p=0.0625 (two-sided)
+- Greedy candidate is **bit-identical to B** (0/100 mismatches) — determinism verified
+- Self-consistency majority (k=5, offline from saved candidates): also 79.0%
+- **Oracle pool ceiling: 79** — verifier selection already equals the best achievable
+  over the candidate pool (whenever any candidate was correct, the verifier picked it)
+- Artifacts: `reports/C_val_n100.jsonl` (all candidates + scores + result signatures),
+  `reports/eval_C_val_n100.json`
+
 ## Baseline context (earlier gates)
 
 - A on n=20 val (Phase 4/5): 50.0% — official-evaluator agreement: **100%** (M2)
