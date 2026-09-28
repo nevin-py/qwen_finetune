@@ -1,0 +1,53 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]Loading weights:   0%|          | 1/338 [00:00<01:12,  4.64it/s]Loading weights:   5%|▌         | 17/338 [00:00<00:04, 65.84it/s]Loading weights:  12%|█▏        | 41/338 [00:00<00:02, 127.29it/s]Loading weights:  22%|██▏       | 75/338 [00:00<00:01, 197.94it/s]Loading weights:  30%|██▉       | 101/338 [00:00<00:01, 216.33it/s]Loading weights:  40%|████      | 136/338 [00:00<00:00, 249.71it/s]Loading weights:  51%|█████     | 171/338 [00:00<00:00, 268.17it/s]Loading weights:  59%|█████▉    | 199/338 [00:00<00:00, 257.69it/s]Loading weights:  68%|██████▊   | 231/338 [00:01<00:00, 270.43it/s]Loading weights:  77%|███████▋  | 259/338 [00:01<00:00, 266.33it/s]Loading weights:  86%|████████▌ | 291/338 [00:01<00:00, 276.89it/s]Loading weights:  94%|█████████▍| 319/338 [00:01<00:00, 271.05it/s]Loading weights: 100%|██████████| 338/338 [00:01<00:00, 234.27it/s]
+[1/100] hospital_1: SELECT DISTINCT name FROM medication ORDER BY name
+[2/100] club_1: SELECT AVG(Age) FROM Student WHERE StuID IN (SELECT StuID FROM Member_of_club WH
+[3/100] flight_1: SELECT e.salary, e.name FROM employee e JOIN certificate c ON e.eid = c.eid GROU
+[4/100] party_host: SELECT T2.Location FROM host AS T1 JOIN party_host AS T3 ON T1.Host_ID = T3.Host
+[5/100] music_2: SELECT COUNT(T1.SongId) FROM Vocals AS T1 INNER JOIN Performance AS T2 ON T1.Son
+[6/100] soccer_2: SELECT DISTINCT T1.state FROM College AS T1 JOIN Tryout AS T2 ON T1.cName = T2.c
+[7/100] film_rank: SELECT T1.Title, T1.Director FROM film AS T1 WHERE T1.Film_ID NOT IN (SELECT T2.
+[8/100] behavior_monitoring: SELECT T1.last_name FROM Teachers AS T1 WHERE T1.teacher_id NOT IN (SELECT T2.te
+[9/100] school_player: SELECT Denomination ,  COUNT(*) FROM school GROUP BY Denomination ORDER BY COUNT
+[10/100] baseball_1: SELECT T1.name, T1.team_id FROM postseason AS T1 INNER JOIN team AS T2 ON T1.tea
+[11/100] game_1: SELECT StuID FROM Student WHERE Advisor = '1121'
+[12/100] machine_repair: SELECT Team FROM technician GROUP BY Team HAVING COUNT(*) >= 2
+[13/100] music_2: SELECT DISTINCT Label FROM Albums
+[14/100] college_2: SELECT T1.title FROM course AS T1 INNER JOIN section AS T2 ON T1.course_id = T2.
+[15/100] icfp_1: SELECT T1.title FROM Papers AS T1 INNER JOIN Authorship AS T2 ON T1.paperID = T2
+[16/100] college_2: SELECT T1.name, T1.salary FROM instructor AS T1 INNER JOIN advisor AS T2 ON T1.I
+[17/100] university_basketball: SELECT T1.Primary_conference FROM university AS T1 JOIN basketball_match AS T2 O
+[18/100] e_government: SELECT T1.organization_name FROM Organizations AS T1 JOIN Organization_Contact_I
+[19/100] inn_1: SELECT SUM(beds) FROM Rooms WHERE bedType = 'King'
+[20/100] voter_2: SELECT AVG(Age) FROM STUDENT WHERE City_Code = 'NYC' AND EXISTS (SELECT 1 FROM V
+[21/100] music_4: SELECT T2.Date_of_ceremony FROM volume AS T1 INNER JOIN music_festival AS T2 ON 
+[22/100] insurance_and_eClaims: SELECT T2.Policy_Type_Code FROM Customers AS T1 INNER JOIN Policies AS T2 ON T1.
+[23/100] college_1: SELECT T1.CRS_DESCRIPTION, T1.CRS_CREDIT FROM COURSE AS T1 INNER JOIN CLASS AS T
+[24/100] university_basketball: SELECT Affiliation, COUNT(*) FROM university WHERE Enrollment > 20000 GROUP BY A
+[25/100] race_track: SELECT T1.Name, T1.Location, T1.Seating FROM track AS T1 JOIN ( SELECT Track_ID 
+[26/100] manufacturer: SELECT Name FROM furniture WHERE Price_in_Dollar < (SELECT MAX(Price_in_Dollar) 
+[27/100] local_govt_and_lot: SELECT T1.date_moved_in ,  T1.customer_id ,  T1.customer_details FROM Customer_E
+[28/100] dorm_1: SELECT T1.gender, COUNT(T1.stuid) AS num_students FROM Student AS T1 JOIN Lives_
+[29/100] phone_1: SELECT T1.Hardware_Model_name, T2.Company_name FROM phone AS T1 JOIN chip_model 
+[30/100] baseball_1: SELECT COUNT(DISTINCT T1.park_id) FROM home_game AS T1 INNER JOIN park AS T2 ON 
+[31/100] network_2: SELECT T1.name FROM Person AS T1 INNER JOIN PersonFriend AS T2 ON T1.name = T2.f
+[32/100] college_1: SELECT count(*) FROM employee
+[33/100] ship_1: SELECT T1.Name, T1.Class FROM Ship AS T1 WHERE T1.Ship_ID NOT IN (SELECT Ship_ID
+[34/100] wine_1: SELECT T2.Color FROM wine AS T1 INNER JOIN grapes AS T2 ON T1.Grape = T2.Grape G
+[35/100] cre_Doc_Control_Systems: SELECT T1.role_description ,  COUNT(T1.employee_id) FROM Employees AS T1 JOIN Ro
+[36/100] customers_and_products_contacts: SELECT min(product_price), max(product_price), avg(product_price) FROM Products
+[37/100] tracking_orders: SELECT T3.order_id FROM Orders AS T1 INNER JOIN Order_Items AS T2 ON T1.order_id
+[38/100] company_office: SELECT Stories FROM buildings ORDER BY Height DESC LIMIT 1
+[39/100] manufactory_1: SELECT m.Name, AVG(p.Price) AS AveragePrice
+FROM Manufacturers m
+JOIN Products p
+[40/100] party_host: SELECT Name FROM host WHERE Host_ID NOT IN (SELECT Host_ID FROM party_host)
+[41/100] store_1: SELECT T1.name FROM tracks AS T1 INNER JOIN genres AS T2 ON T1.genre_id = T2.id 
+[42/100] swimming: SELECT T1.name, T1.nationality FROM swimmer AS T1 JOIN record AS T2 ON T1.id = T
+[43/100] bike_1: SELECT AVG(bikes_available) FROM status WHERE station_id NOT IN (SELECT id FROM 
+[44/100] medicine_enzyme_interaction: SELECT T1.name FROM enzyme AS T1 INNER JOIN medicine_enzyme_interaction AS T2 ON
+[45/100] company_employee: SELECT Headquarters, Industry FROM company
+[46/100] cre_Docs_and_Epenses: SELECT T3.Document_Type_Code, T3.Document_Name, T3.Document_Description FROM Doc
+[47/100] department_management: SELECT head_id ,  name FROM head WHERE name LIKE '%Ha%'
+[48/100] ship_1: SELECT T1.Name FROM Ship AS T1 JOIN captain AS T2 ON T1.Ship_ID = T2.Ship_ID WHE
+[49/100] device: SELECT Shop_Name FROM shop ORDER BY Open_Year ASC

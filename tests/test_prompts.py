@@ -73,6 +73,10 @@ def test_split_stratified_deterministic():
     idx = stratified_val_indices(items)
     assert idx == stratified_val_indices(items)
     assert len(idx) == 700
+    # duplicate clusters never straddle the split
+    key = lambda i: (items[i]["db_id"], items[i]["question"].strip().lower())
+    val_keys = {key(i) for i in idx}
+    assert not (val_keys & {key(i) for i in range(len(items)) if i not in idx})
     per_db = Counter(items[i]["db_id"] for i in idx)
     sizes = Counter(x["db_id"] for x in items)
     big = [d for d, n in sizes.items() if n >= 10]
@@ -82,14 +86,16 @@ def test_split_stratified_deterministic():
 
 
 def test_split_is_reproducible():
-    """On-disk split must stay the canonical v1 carve until --stratify is run
-    (otherwise every val artifact silently invalidates)."""
-    from scripts.make_split import canonical_val_indices
+    """On-disk split must be one of the two known carves (v1 canonical or
+    v2 --stratify) — anything else means the split drifted silently."""
+    from scripts.make_split import canonical_val_indices, stratified_val_indices
 
     items = json.loads((ROOT / "data" / "spider" / "train_spider.json").read_text())
     val = json.loads((ROOT / "data" / "splits" / "val.json").read_text())
-    assert {key(x) for x in val} == {key(items[i])
-                                     for i in canonical_val_indices(items)}
+    on_disk = {key(x) for x in val}
+    canonical = {key(items[i]) for i in canonical_val_indices(items)}
+    stratified = {key(items[i]) for i in stratified_val_indices(items)}
+    assert on_disk in (canonical, stratified)
 
 
 def key(x):

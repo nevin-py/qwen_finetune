@@ -1,0 +1,142 @@
+[
+ {
+  "index": 0,
+  "db_id": "hospital_1",
+  "question": "What is the id of the patient who stayed in room 111 most recently?",
+  "query": "SELECT patient FROM stay WHERE room  =  111 ORDER BY staystart DESC LIMIT 1",
+  "prediction": "SELECT T2.Patient FROM Room AS T1 INNER JOIN Stay AS T2 ON T1.RoomNumber = T2.Room WHERE T1.RoomNumber = 111 ORDER BY T2.StayEnd DESC LIMIT 1"
+ },
+ {
+  "index": 1,
+  "db_id": "cre_Doc_Tracking_DB",
+  "question": "What are the names of the employees who authorised the destruction and the employees who destroyed the corresponding documents?",
+  "query": "SELECT T2.employee_name ,  T3.employee_name FROM Documents_to_be_destroyed AS T1 JOIN Employees AS T2 ON T1.Destruction_Authorised_by_Employee_ID = T2.employee_id JOIN Employees AS T3 ON T1.Destroyed_by_Employee_ID = T3.employee_id;",
+  "prediction": "SELECT T1.Employee_Name AS Destruction_Authorised_By, T2.Employee_Name AS Destroyed_By FROM Documents_to_be_destroyed AS T1 INNER JOIN Employees AS T2 ON T1.Destruction_Authorised_by_Employee_ID = T2.Employee_ID"
+ },
+ {
+  "index": 2,
+  "db_id": "allergy_1",
+  "question": "Show all majors and corresponding number of students.",
+  "query": "SELECT major ,  count(*) FROM Student GROUP BY major",
+  "prediction": "SELECT major ,  count(*) FROM student GROUP BY major"
+ },
+ {
+  "index": 3,
+  "db_id": "party_host",
+  "question": "Show the name and the nationality of the oldest host.",
+  "query": "SELECT Name ,  Nationality FROM HOST ORDER BY Age DESC LIMIT 1",
+  "prediction": "SELECT Name, Nationality FROM host ORDER BY Age ASC LIMIT 1"
+ },
+ {
+  "index": 4,
+  "db_id": "tracking_software_problems",
+  "question": "Find the ids of the problems that are reported by the staff whose last name is Bosco.",
+  "query": "SELECT T1.problem_id FROM problems AS T1 JOIN staff AS T2 ON T1.reported_by_staff_id = T2.staff_id WHERE T2.staff_last_name = \"Bosco\"",
+  "prediction": "SELECT T1.problem_id FROM Problem_Log AS T1 INNER JOIN Staff AS T2 ON T1.assigned_to_staff_id = T2.staff_id WHERE T2.staff_last_name = 'Bosco'"
+ },
+ {
+  "index": 5,
+  "db_id": "soccer_2",
+  "question": "Find the states where have the colleges whose enrollments are less than the largest size.",
+  "query": "SELECT DISTINCT state FROM college WHERE enr  <  (SELECT max(enr) FROM college)",
+  "prediction": "SELECT T1.state FROM College AS T1 JOIN ( SELECT MAX(enr) AS max_enr FROM College ) AS T2 ON T1.enr < T2.max_enr"
+ },
+ {
+  "index": 6,
+  "db_id": "student_1",
+  "question": "Find the classroom that the most students use.",
+  "query": "SELECT classroom FROM list GROUP BY classroom ORDER BY count(*) DESC LIMIT 1",
+  "prediction": "SELECT Classroom FROM list GROUP BY Classroom ORDER BY COUNT(*) DESC LIMIT 1"
+ },
+ {
+  "index": 7,
+  "db_id": "behavior_monitoring",
+  "question": "How many addresses have zip code 197?",
+  "query": "SELECT count(*) FROM ADDRESSES WHERE zip_postcode  =  \"197\"",
+  "prediction": "SELECT COUNT(*) FROM Addresses WHERE zip_postcode = '197'"
+ },
+ {
+  "index": 8,
+  "db_id": "store_product",
+  "question": "What is the city with the most number of flagship stores?",
+  "query": "SELECT t3.headquartered_city FROM store AS t1 JOIN store_district AS t2 ON t1.store_id  =  t2.store_id JOIN district AS t3 ON t2.district_id  =  t3.district_id GROUP BY t3.headquartered_city ORDER BY count(*) DESC LIMIT 1",
+  "prediction": "SELECT T1.Headquartered_City FROM store AS T1 JOIN store_district AS T2 ON T1.Store_ID = T2.Store_ID GROUP BY T1.Headquartered_City ORDER BY COUNT(*) DESC LIMIT 1"
+ },
+ {
+  "index": 9,
+  "db_id": "baseball_1",
+  "question": "List players' first name and last name who have weight greater than 220 or height shorter than 75.",
+  "query": "SELECT name_first ,  name_last FROM player WHERE weight  >  220 OR height  <  75",
+  "prediction": "SELECT name_first, name_last FROM player WHERE weight > 220 OR height < 75"
+ },
+ {
+  "index": 10,
+  "db_id": "game_1",
+  "question": "What is the first and last name of the student who played the most sports?",
+  "query": "SELECT T2.Fname ,  T2.Lname FROM Sportsinfo AS T1 JOIN Student AS T2 ON T1.StuID  =  T2.StuID GROUP BY T1.StuID ORDER BY count(*) DESC LIMIT 1",
+  "prediction": "SELECT T1.fname, T1.lname FROM Student AS T1 INNER JOIN SportsInfo AS T2 ON T1.StuID = T2.StuID ORDER BY T2.GamesPlayed DESC LIMIT 1"
+ },
+ {
+  "index": 11,
+  "db_id": "formula_1",
+  "question": "How many drivers did not participate in the races held in 2009?",
+  "query": "SELECT count(DISTINCT driverId) FROM results WHERE raceId NOT IN( SELECT raceId FROM races WHERE YEAR != 2009 )",
+  "prediction": "SELECT COUNT(DISTINCT T1.driverId) FROM results AS T1 INNER JOIN races AS T2 ON T1.raceId = T2.raceId WHERE T2.year = 2009 AND T1.resultId IS NULL"
+ },
+ {
+  "index": 12,
+  "db_id": "manufactory_1",
+  "question": "Find the total revenue for each manufacturer.",
+  "query": "SELECT sum(revenue) ,  name FROM manufacturers GROUP BY name",
+  "prediction": "SELECT M.Name, SUM(P.Revenue) AS TotalRevenue\nFROM Manufacturers M\nJOIN Products P ON M.Code = P.Manufacturer\nGROUP BY M.Name"
+ },
+ {
+  "index": 13,
+  "db_id": "college_2",
+  "question": "Find the year which offers the largest number of courses.",
+  "query": "SELECT YEAR FROM SECTION GROUP BY YEAR ORDER BY count(*) DESC LIMIT 1",
+  "prediction": "SELECT YEAR FROM SECTION GROUP BY YEAR ORDER BY COUNT(*) DESC LIMIT 1"
+ },
+ {
+  "index": 14,
+  "db_id": "icfp_1",
+  "question": "Which institution is the author \"Matthias Blume\" belong to? Give me the name of the institution.",
+  "query": "SELECT DISTINCT t3.name FROM authors AS t1 JOIN authorship AS t2 ON t1.authid  =  t2.authid JOIN inst AS t3 ON t2.instid  =  t3.instid WHERE t1.fname  =  \"Matthias\" AND t1.lname  =  \"Blume\"",
+  "prediction": "SELECT T2.name FROM Authors AS T1 INNER JOIN Authorship AS T2 ON T1.authID = T2.authID WHERE T1.fname = 'Matthias' AND T1.lname = 'Blume'"
+ },
+ {
+  "index": 15,
+  "db_id": "college_2",
+  "question": "Find the name and salary of the instructors who are advisors of any student from History department?",
+  "query": "SELECT T2.name ,  T2.salary FROM advisor AS T1 JOIN instructor AS T2 ON T1.i_id  =  T2.id JOIN student AS T3 ON T1.s_id  =  T3.id WHERE T3.dept_name  =  'History'",
+  "prediction": "SELECT T1.name, T1.salary FROM instructor AS T1 INNER JOIN advisor AS T2 ON T1.ID = T2.i_ID WHERE T2.s_ID IN (SELECT ID FROM student WHERE dept_name = 'History')"
+ },
+ {
+  "index": 16,
+  "db_id": "university_basketball",
+  "question": "What is the founded year of the non public school that was founded most recently?",
+  "query": "SELECT founded FROM university WHERE affiliation != 'Public' ORDER BY founded DESC LIMIT 1",
+  "prediction": "SELECT T1.Founded FROM university AS T1 WHERE T1.Affiliation = 'Non Public' ORDER BY T1.Founded DESC LIMIT 1"
+ },
+ {
+  "index": 17,
+  "db_id": "school_bus",
+  "question": "Show the party with drivers from Hartford and drivers older than 40.",
+  "query": "SELECT party FROM driver WHERE home_city  =  'Hartford' AND age  >  40",
+  "prediction": "SELECT Party FROM driver WHERE Home_city = 'Hartford' AND Age > 40"
+ },
+ {
+  "index": 18,
+  "db_id": "inn_1",
+  "question": "How many kids stay in the rooms reserved by ROY SWEAZY?",
+  "query": "SELECT kids FROM Reservations WHERE FirstName = \"ROY\" AND LastName  =  \"SWEAZY\";",
+  "prediction": "SELECT SUM(Kids) FROM Reservations WHERE LastName = 'ROY' AND FirstName = 'SWEAZY'"
+ },
+ {
+  "index": 19,
+  "db_id": "products_gen_characteristics",
+  "question": "Return the names of products in the category 'Spices'.",
+  "query": "SELECT product_name FROM products WHERE product_category_code  =  \"Spices\"",
+  "prediction": "SELECT T1.product_name FROM Products AS T1 INNER JOIN Ref_Product_Categories AS T2 ON T1.product_category_code = T2.product_category_code WHERE T2.product_category_description = 'Spices'"
+ }
+]

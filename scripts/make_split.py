@@ -25,21 +25,53 @@ SEED = 13
 def stratified_val_indices(items: list[dict], val_n: int = VAL_N,
                            seed: int = SEED) -> set[int]:
     """Val indices: proportional per-db quota (largest remainder), shuffled
-    in place with a seeded RNG. Deterministic for a fixed item order."""
+    in place with a seeded RNG. Duplicate (db_id, question) clusters are
+    assigned atomically so train/val can never share a key. Deterministic
+    for a fixed item order; always returns exactly ``val_n`` indices."""
     rng = random.Random(seed)
-    groups: dict[str, list[int]] = {}
+    key_of = lambda x: (x["db_id"], x["question"].strip().lower())
+
+    # cluster indices by key, per db, first-seen order
+    clusters: dict[str, list[list[int]]] = {}
+    by_key: dict[tuple[str, str], list[int]] = {}
     for i, x in enumerate(items):
-        groups.setdefault(x["db_id"], []).append(i)
+        k = key_of(x)
+        if k not in by_key:
+            by_key[k] = []
+            clusters.setdefault(x["db_id"], []).append(by_key[k])
+        by_key[k].append(i)
+
     total = len(items)
-    quota = {d: len(g) * val_n / total for d, g in groups.items()}
+    quota = {d: sum(len(c) for c in g) * val_n / total
+             for d, g in clusters.items()}
     base = {d: int(q) for d, q in quota.items()}
-    order = sorted(groups, key=lambda d: (-(quota[d] - base[d]), d))
-    for d in order[: val_n - sum(base.values())]:
-        base[d] += 1
+    # largest-remainder top-up to exactly val_n
+    need = val_n - sum(base.values())
+    for d in sorted(clusters, key=lambda d: (-(quota[d] - base[d]), d)):
+        if need <= 0:
+            break
+        if quota[d] > base[d]:
+            base[d] += 1
+            need -= 1
+
     val_idx: set[int] = set()
-    for d, g in groups.items():
+    for d, g in clusters.items():
+        g = list(g)
         rng.shuffle(g)
-        val_idx.update(g[: base[d]])
+        remaining = base[d]
+        for c in g:
+            if len(c) <= remaining:
+                val_idx.update(c)
+                remaining -= len(c)
+    # exact top-up from the leftover pool (size-1 clusters make this exact)
+    if len(val_idx) < val_n:
+        pool = [c for g in clusters.values() for c in g if not set(c) & val_idx]
+        rng.shuffle(pool)
+        for c in pool:
+            if len(val_idx) >= val_n:
+                break
+            if len(val_idx) + len(c) <= val_n:
+                val_idx.update(c)
     assert len(val_idx) == val_n, (len(val_idx), val_n)
     return val_idx
 

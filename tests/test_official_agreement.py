@@ -39,12 +39,15 @@ def _official_correct(items, preds, db_dir):
 
 
 def test_agreement_with_official_evaluator():
-    split = ROOT / "data" / "splits" / "val.json"
-    preds_path = ROOT / "reports" / "baseline_val_n20.jsonl"
-    if not preds_path.exists():
-        pytest.skip("baseline predictions not generated")
-    items = json.loads(split.read_text())
-    predictions = [json.loads(line) for line in preds_path.open()]
+    """Runs on a frozen fixture (split-independent): 20 real baseline
+    predictions with their gold, captured from the v1 val carve."""
+    fixture = json.loads(
+        (ROOT / "tests" / "fixtures" / "official_agreement.json").read_text())
+    items = [{"db_id": x["db_id"], "question": x["question"],
+              "query": x["query"]} for x in fixture]
+    predictions = [{"index": x["index"], "db_id": x["db_id"],
+                    "question": x["question"], "prediction": x["prediction"]}
+                   for x in fixture]
     db_dir = ROOT / "data" / "spider" / "database"
 
     ours = evaluate(items, predictions, db_dir)
