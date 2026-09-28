@@ -18,6 +18,11 @@ Rules:
 {examples}"""
 
 
+def _system(schema: str, few_shot: str = "") -> str:
+    examples = f"\nExamples:\n{few_shot.strip()}\n" if few_shot.strip() else ""
+    return INSTRUCTIONS.format(examples=examples) + f"\nSchema:\n{schema}"
+
+
 def build_messages(
     question: str,
     schema: str,
@@ -25,9 +30,29 @@ def build_messages(
     few_shot: str = "",
 ) -> list[dict[str, str]]:
     """Chat messages for text-to-SQL generation."""
-    examples = f"\nExamples:\n{few_shot.strip()}\n" if few_shot.strip() else ""
-    system = INSTRUCTIONS.format(examples=examples) + f"\nSchema:\n{schema}"
     return [
-        {"role": "system", "content": system},
+        {"role": "system", "content": _system(schema, few_shot)},
         {"role": "user", "content": question},
+    ]
+
+
+def build_repair_messages(
+    question: str,
+    schema: str,
+    sql: str,
+    feedback: str,
+) -> list[dict[str, str]]:
+    """Chat messages for one bounded repair attempt (cell D).
+
+    Same system instructions as generation so the model stays on-distribution;
+    the user turn carries the previous SQL plus verifier-derived feedback
+    (execution error / observable weaknesses — never gold SQL).
+    """
+    user = (
+        f"{question}\n\nYour previous SQL:\n{sql}\n"
+        f"Problem: {feedback}\nReturn corrected SQL only."
+    )
+    return [
+        {"role": "system", "content": _system(schema)},
+        {"role": "user", "content": user},
     ]

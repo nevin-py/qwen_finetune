@@ -13,7 +13,6 @@ Gold SQL never enters this script (objective §12).
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import time
 from pathlib import Path
@@ -22,16 +21,10 @@ from t2sql.inference.engine import LLM, extract_sql
 from t2sql.prompts.schema import schema_text
 from t2sql.prompts.template import build_messages
 from t2sql.sandbox.executor import Sandbox
-from t2sql.verifier.features import extract_features
+from t2sql.verifier.features import extract_features, result_signature
 from t2sql.verifier.scorer import score
 
 ROOT = Path(__file__).resolve().parents[1]
-
-
-def result_signature(columns, rows) -> str:
-    """Order-insensitive signature of an executed result (gold-free)."""
-    blob = repr((tuple(map(str, columns)), sorted(map(repr, rows))))
-    return hashlib.sha1(blob.encode()).hexdigest()[:12]
 
 
 def main() -> None:

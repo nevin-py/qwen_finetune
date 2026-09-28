@@ -45,6 +45,29 @@ Everything below uses the **validation split** (official dev stays locked).
 - Artifacts: `reports/C_val_n100.jsonl` (all candidates + scores + result signatures),
   `reports/eval_C_val_n100.json`
 
+## Experiment D (bounded repair) — same 100 val questions, τ=3.0, ≤2 iterations
+
+| Cell | Pipeline | Execution accuracy |
+|---|---|---|
+| C | verifier selection over k=5 | 79.0% |
+| D | C + verifier-gated repair (score < τ → ≤2 rounds, verifier sole judge) | **80.0%** |
+
+- Paired C→D: **1 improvement, 0 regressions** (exact McNemar p=1.0, single discordant pair)
+- 28/100 flagged by τ=3.0 (tuned on validation: catches 9/21 known-wrong C items),
+  35 repair attempts, **5 replacements** — every replacement strictly score-improving,
+  zero regressions by construction + empirically
+- **Execution errors in final output: 0** (C had 2 no_such_column failures; both repaired)
+- τ rationale: verifier scores poorly separate correct/unknown (wrong p50 = correct p50
+  = 3.30 — consensus-wrong answers score high); repair is gated so blast radius is
+  bounded by the strict-improvement rule
+- Artifacts: `reports/D_val_n100.jsonl`, `reports/eval_D_val_n100.json`
+
+## Full matrix (validation, n=100, seed 0)
+
+| A (base) | B (+QLoRA) | C (+verifier) | D (+repair) |
+|---|---|---|---|
+| 47.0% | 74.0% | 79.0% | **80.0%** |
+
 ## Baseline context (earlier gates)
 
 - A on n=20 val (Phase 4/5): 50.0% — official-evaluator agreement: **100%** (M2)

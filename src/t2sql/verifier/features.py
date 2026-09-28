@@ -7,12 +7,19 @@ requires multiple generations, not because it is privileged information.
 """
 from __future__ import annotations
 
+import hashlib
 import re
 
 _AGG = re.compile(r"\b(COUNT|SUM|AVG|MIN|MAX|GROUP\s+BY)\b", re.IGNORECASE)
 _TABLE = re.compile(r"\b(?:FROM|JOIN)\s+([A-Za-z_][A-Za-z0-9_]*)", re.IGNORECASE)
 _COUNT_HINT = re.compile(r"\bhow many\b|\bnumber of\b|\bcount\b|\btotal\b", re.IGNORECASE)
 _VALUE_HINT = re.compile(r"'([^']{2,})'")
+
+
+def result_signature(columns, rows) -> str:
+    """Order-insensitive signature of an executed result (gold-free)."""
+    blob = repr((tuple(map(str, columns)), sorted(map(repr, rows))))
+    return hashlib.sha1(blob.encode()).hexdigest()[:12]
 
 
 def n_tables_referenced(sql: str) -> int:
