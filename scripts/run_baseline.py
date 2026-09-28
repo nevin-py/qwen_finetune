@@ -17,7 +17,7 @@ import torch
 from t2sql.datasets import db_file, dataset_items, sample_indices
 from t2sql.inference.engine import LLM, extract_sql
 from t2sql.prompts.schema import schema_text
-from t2sql.prompts.template import build_messages, full_question
+from t2sql.prompts.template import build_messages, full_question, variant_for
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -29,7 +29,13 @@ def main() -> None:
     ap.add_argument("--dataset", default="spider", choices=["spider", "bird"])
     ap.add_argument("--n", type=int, default=20)
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--max-new-tokens", type=int, default=256)
+    ap.add_argument("--max-new-tokens", type=int, default=512)
+    ap.add_argument("--prompt-variants", type=int, default=1,
+                    help="instruction variants in play (1 = original text)")
+    ap.add_argument("--few-shot-file", default=None,
+                    help="text file with the few-shot block (0 = none)")
+    ap.add_argument("--schema-samples", action="store_true",
+                    help="append row counts + example values to the schema")
     ap.add_argument("--fp16", action="store_true",
                     help="load unquantized (needs VRAM headroom)")
     ap.add_argument("--adapter", default=None,
@@ -45,13 +51,17 @@ def main() -> None:
         ROOT / "reports" / f"baseline_{args.split}_n{len(sample)}.jsonl"
     llm = LLM(args.model, quantize=not args.fp16, adapter=args.adapter)
     schema_cache: dict[str, str] = {}
+    few_shot = Path(args.few_shot_file).read_text() if args.few_shot_file else ""
     t_start = time.time()
     with out_path.open("w") as fh:
         for i, (index, item) in enumerate(sample):
             db_id = item["db_id"]
             if db_id not in schema_cache:
-                schema_cache[db_id] = schema_text(db_file(args.dataset, db_id))
-            messages = build_messages(full_question(item), schema_cache[db_id])
+                schema_cache[db_id] = schema_text(
+                    db_file(args.dataset, db_id), samples=args.schema_samples)
+            messages = build_messages(
+                full_question(item), schema_cache[db_id], few_shot=few_shot,
+                variant=variant_for(item["question"], args.prompt_variants))
             pred = extract_sql(llm.generate(messages, max_new_tokens=args.max_new_tokens))
             # no gold in the output file: eval joins on index and verifies the pair
             fh.write(json.dumps({"index": index, "db_id": db_id,

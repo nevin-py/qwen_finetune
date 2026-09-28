@@ -1,7 +1,6 @@
 """Phase 4 gate: schema serialization, prompt template, SQL extraction, split."""
 
 import json
-import random
 from pathlib import Path
 
 from t2sql.inference.engine import extract_sql
@@ -64,14 +63,33 @@ def test_split_counts_and_disjointness():
     assert not ({key(x) for x in train} & {key(x) for x in val})
 
 
-def test_split_is_reproducible():
+def test_split_stratified_deterministic():
+    """Checklist 0.4: stratified-by-db split is deterministic and balanced."""
+    from collections import Counter
+
+    from scripts.make_split import stratified_val_indices
+
     items = json.loads((ROOT / "data" / "spider" / "train_spider.json").read_text())
-    rng = random.Random(13)
-    order = list(range(len(items)))
-    rng.shuffle(order)
+    idx = stratified_val_indices(items)
+    assert idx == stratified_val_indices(items)
+    assert len(idx) == 700
+    per_db = Counter(items[i]["db_id"] for i in idx)
+    sizes = Counter(x["db_id"] for x in items)
+    big = [d for d, n in sizes.items() if n >= 10]
+    assert big
+    for d in big:
+        assert abs(per_db[d] / sizes[d] - 0.1) <= 0.12, (d, per_db[d], sizes[d])
+
+
+def test_split_is_reproducible():
+    """On-disk split must stay the canonical v1 carve until --stratify is run
+    (otherwise every val artifact silently invalidates)."""
+    from scripts.make_split import canonical_val_indices
+
+    items = json.loads((ROOT / "data" / "spider" / "train_spider.json").read_text())
     val = json.loads((ROOT / "data" / "splits" / "val.json").read_text())
-    # same subset regardless of iteration order (script preserves source order)
-    assert {key(x) for x in val} == {key(items[i]) for i in order[:700]}
+    assert {key(x) for x in val} == {key(items[i])
+                                     for i in canonical_val_indices(items)}
 
 
 def key(x):

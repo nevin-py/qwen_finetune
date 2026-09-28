@@ -36,7 +36,10 @@ def test_prebuilt_training_set():
         pytest.skip("run scripts/build_training_set.py first")
     examples = json.loads(path.read_text())
     items = json.loads((ROOT / "data" / "splits" / "train.json").read_text())
-    assert len(examples) == len(items) == 6300
-    for item, ex in zip(items, examples):
-        assert ex["messages"][2]["content"] == item["query"]
-        assert ex["messages"][1]["content"] == item["question"]
+    # dedup + quarantine may drop items (checklist 0.1/0.3); every surviving
+    # example must trace back to a raw train item by (question, gold SQL)
+    assert 6300 - 60 <= len(examples) <= len(items) == 6300
+    pairs = {(x["question"], x["query"]) for x in items}
+    for ex in examples:
+        q, a = ex["messages"][1]["content"], ex["messages"][2]["content"]
+        assert (q, a) in pairs

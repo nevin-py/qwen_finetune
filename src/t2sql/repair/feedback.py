@@ -16,6 +16,12 @@ def build_feedback(features: dict, error_message: str | None = None) -> str:
         return f"The query does not run: {msg}"
 
     parts: list[str] = []
+    if features.get("pool_disagrees"):
+        n = int(features.get("pool_majority_n", 0))
+        k = int(features.get("pool_k", 0))
+        parts.append(f"Most other sampled attempts ({n} of {k}) produced a "
+                     "different result set; re-check how the question maps to "
+                     "joins and filters.")
     if features.get("empty"):
         parts.append("The query returns no rows; check the filters and joins "
                      "against the question.")

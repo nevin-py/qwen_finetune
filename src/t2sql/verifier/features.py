@@ -26,6 +26,22 @@ def n_tables_referenced(sql: str) -> int:
     return len({m for m in _TABLE.findall(sql)})
 
 
+def tables_referenced(sql: str) -> list[str]:
+    """Distinct table names after FROM/JOIN, lower-cased."""
+    return sorted({m.lower() for m in _TABLE.findall(sql)})
+
+
+def schema_link(question: str, sql: str) -> float:
+    """Fraction of referenced tables named in the question (schema-linking
+    signal, checklist 4.5). 0 when the query reads nothing."""
+    tables = tables_referenced(sql)
+    if not tables:
+        return 0.0
+    q = question.lower()
+    hits = sum(1 for t in tables if t in q or t.replace("_", " ") in q)
+    return hits / len(tables)
+
+
 def expects_count(question: str) -> bool:
     return bool(_COUNT_HINT.search(question))
 
@@ -64,6 +80,7 @@ def extract_features(
             "expects_count": 1.0 if expects_count(question) else 0.0,
             "count_shape_match": 0.0,
             "n_tables": float(n_tables_referenced(sql)),
+            "schema_link": float(schema_link(question, sql)),
             "has_agg": 1.0 if _AGG.search(sql) else 0.0,
             "empty": 1.0,
             "truncated": 1.0 if truncated else 0.0,
@@ -82,6 +99,7 @@ def extract_features(
         "expects_count": 1.0 if exp_count else 0.0,
         "count_shape_match": 1.0 if (exp_count == scalar or not exp_count) else 0.0,
         "n_tables": float(n_tables_referenced(sql)),
+        "schema_link": float(schema_link(question, sql)),
         "has_agg": 1.0 if _AGG.search(sql) else 0.0,
         "empty": 1.0 if empty else 0.0,
         "truncated": 1.0 if truncated else 0.0,

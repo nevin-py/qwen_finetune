@@ -20,7 +20,7 @@ from pathlib import Path
 from t2sql.datasets import db_file, dataset_items, sample_indices
 from t2sql.inference.engine import LLM, extract_sql
 from t2sql.prompts.schema import schema_text
-from t2sql.prompts.template import build_messages, full_question
+from t2sql.prompts.template import build_messages, full_question, variant_for
 from t2sql.sandbox.executor import Sandbox
 from t2sql.verifier.features import extract_features, result_signature
 from t2sql.verifier.scorer import score
@@ -35,8 +35,16 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--k", type=int, default=5, help="candidates per question")
     ap.add_argument("--temperature", type=float, default=0.8)
-    ap.add_argument("--max-new-tokens", type=int, default=256)
+    ap.add_argument("--max-new-tokens", type=int, default=512)
     ap.add_argument("--adapter", default=None)
+    ap.add_argument("--weights", default=None,
+                    help="tuned verifier weights JSON (default: built-in rules)")
+    ap.add_argument("--prompt-variants", type=int, default=1,
+                    help="instruction variants in play (1 = original text)")
+    ap.add_argument("--few-shot-file", default=None,
+                    help="text file with the few-shot block")
+    ap.add_argument("--schema-samples", action="store_true",
+                    help="append row counts + example values to the schema")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
 
@@ -47,6 +55,8 @@ def main() -> None:
     schema_cache: dict[str, str] = {}
     sandboxes: dict[str, Sandbox] = {}
     out_path = Path(args.out).resolve()
+    weights = json.loads(Path(args.weights).read_text()) if args.weights else None
+    few_shot = Path(args.few_shot_file).read_text() if args.few_shot_file else ""
     t_start = time.time()
 
     with out_path.open("w") as fh:
@@ -54,16 +64,24 @@ def main() -> None:
             item = items[i]
             db_id = item["db_id"]
             if db_id not in schema_cache:
-                schema_cache[db_id] = schema_text(db_file(args.dataset, db_id))
+                schema_cache[db_id] = schema_text(
+                    db_file(args.dataset, db_id), samples=args.schema_samples)
                 sandboxes[db_id] = Sandbox(db_file(args.dataset, db_id))
-            messages = build_messages(full_question(item), schema_cache[db_id])
+            messages = build_messages(
+                full_question(item), schema_cache[db_id], few_shot=few_shot,
+                variant=variant_for(item["question"], args.prompt_variants))
 
-            # candidate 0 = greedy (bit-identical to cell B); rest sampled
+            # candidate 0 = greedy (bit-identical to cell B); then sample until
+            # k unique SQLs or 2x the budget is spent (checklist 4.2 dedup)
             candidates = [llm.generate(messages, max_new_tokens=args.max_new_tokens)]
-            for _ in range(args.k - 1):
-                candidates.append(llm.generate(
+            draws = 0
+            while len(candidates) < args.k and draws < 2 * (args.k - 1):
+                draws += 1
+                sql = llm.generate(
                     messages, max_new_tokens=args.max_new_tokens,
-                    do_sample=True, temperature=args.temperature))
+                    do_sample=True, temperature=args.temperature)
+                if sql not in candidates:
+                    candidates.append(sql)
 
             executed = []  # (sql, ExecResult, sig)
             for sql in candidates:
@@ -76,16 +94,16 @@ def main() -> None:
                 if res.ok:
                     sig_counts[sig] = sig_counts.get(sig, 0) + 1
 
-            records, feats = [], []
+            records = []
             for sql, res, sig in executed:
                 consistency = sig_counts.get(sig, 0) / len(executed) if res.ok else 0.0
                 f = extract_features(
-                    item["question"], sql, executed=res.ok, error=res.error,
+                    full_question(item), sql, executed=res.ok, error=res.error,
                     columns=res.columns, rows=res.rows, truncated=res.truncated,
                     duration_ms=res.duration_ms, consistency=consistency)
-                feats.append(f)
                 records.append({
-                    "sql": sql, "score": round(score(f), 4),
+                    "sql": sql, "score": round(score(f, weights), 4),
+                    "features": f,
                     "executed": res.ok, "error": res.error,
                     "result_sig": sig, "consistency": round(consistency, 3),
                 })
@@ -96,6 +114,7 @@ def main() -> None:
                 "prediction": executed[best][0],
                 "verifier_score": records[best]["score"],
                 "selected": best, "candidates": records,
+                "n_unique": len(candidates), "n_draws": 1 + draws,
             }
             if item.get("evidence"):
                 rec["evidence"] = item["evidence"]  # for repair prompts (input, not gold)

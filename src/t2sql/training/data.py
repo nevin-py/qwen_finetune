@@ -10,19 +10,29 @@ import json
 from pathlib import Path
 
 from ..prompts.schema import schema_text
-from ..prompts.template import build_messages
+from ..prompts.template import build_messages, variant_for
 
 
-def build_training_examples(items: list[dict], db_dir: str | Path) -> list[dict]:
-    """One conversational example per question; assistant turn = gold SQL."""
+def build_training_examples(items: list[dict], db_dir: str | Path,
+                            *, prompt_variants: int = 1,
+                            few_shot: str = "",
+                            samples: bool = False) -> list[dict]:
+    """One conversational example per question; assistant turn = gold SQL.
+
+    ``prompt_variants`` / ``few_shot`` / ``samples`` must match the values
+    used at inference (checklist 3.1-3.3); defaults reproduce v1 exactly.
+    """
     db_dir = Path(db_dir)
     schemas: dict[str, str] = {}
     examples = []
     for item in items:
         db_id = item["db_id"]
         if db_id not in schemas:
-            schemas[db_id] = schema_text(db_dir / db_id / f"{db_id}.sqlite")
-        messages = build_messages(item["question"], schemas[db_id])
+            schemas[db_id] = schema_text(db_dir / db_id / f"{db_id}.sqlite",
+                                         samples=samples)
+        messages = build_messages(
+            item["question"], schemas[db_id], few_shot=few_shot,
+            variant=variant_for(item["question"], prompt_variants))
         messages.append({"role": "assistant", "content": item["query"]})
         examples.append({"messages": messages})
     return examples

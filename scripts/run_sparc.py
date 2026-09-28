@@ -24,8 +24,10 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--model", default="Qwen/Qwen2.5-Coder-1.5B-Instruct")
     ap.add_argument("--n", type=int, default=0, help="0 = all turns")
-    ap.add_argument("--max-new-tokens", type=int, default=256)
+    ap.add_argument("--max-new-tokens", type=int, default=512)
     ap.add_argument("--adapter", default=None)
+    ap.add_argument("--schema-samples", action="store_true",
+                    help="append row counts + example values to the schema")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
 
@@ -43,7 +45,7 @@ def main() -> None:
             db_id = row["db_id"]
             if db_id not in schema_cache:
                 db_file = ROOT / "data" / "spider" / "database" / db_id / f"{db_id}.sqlite"
-                schema_cache[db_id] = schema_text(db_file)
+                schema_cache[db_id] = schema_text(db_file, samples=args.schema_samples)
             messages = build_dialogue_messages(
                 row["question"], schema_cache[db_id], row["history"])
             pred = extract_sql(llm.generate(messages, max_new_tokens=args.max_new_tokens))

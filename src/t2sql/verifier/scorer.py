@@ -14,6 +14,9 @@ DEFAULT_WEIGHTS = {
     "empty": -0.4,
     "truncated": -0.3,
     "slow": -0.2,
+    # schema_link (checklist 4.5): 0.0 until tuned — tuned weights are passed
+    # in as an explicit dict (scripts/tune_verifier.py writes the JSON).
+    "schema_link": 0.0,
 }
 
 _COMPLEXITY_PENALTY = 0.1   # per table beyond 4

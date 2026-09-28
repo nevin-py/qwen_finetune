@@ -2,9 +2,13 @@
 
 One template: instructions + optional few-shot block live in the system
 message, the user message carries the question. Few-shot examples are
-content (string), not a code branch.
+content (string), not a code branch. Instruction variants (checklist 3.1)
+are complete rewrites of the instruction block with identical rules;
+index 0 is the original v1 text so default behavior stays byte-identical.
 """
 from __future__ import annotations
+
+import hashlib
 
 INSTRUCTIONS = """\
 You are a text-to-SQL assistant. Write one SQLite query that answers the
@@ -17,10 +21,55 @@ Rules:
 - Do not modify the database.
 {examples}"""
 
+INSTRUCTION_VARIANTS: tuple[str, ...] = (
+    INSTRUCTIONS,
+    """\
+You are a database assistant. Given the SQLite schema below, write a single
+query that answers the user's question.
 
-def _system(schema: str, few_shot: str = "") -> str:
+Rules:
+- Reply with exactly one SQL statement and nothing else.
+- Reference only tables and columns that appear in the schema.
+- Stay within SQLite syntax.
+- Never write, change, or delete data.
+{examples}""",
+    """\
+Write one SQLite SELECT statement that answers the question. The schema is
+provided below.
+
+Rules:
+- Output only the single SQL statement.
+- Use only schema objects (tables and columns) that exist in the given schema.
+- SQLite dialect only.
+- Read-only: do not alter the database.
+{examples}""",
+    """\
+Task: translate the question into one SQLite query for the schema below.
+
+Rules:
+- Return exactly one SQL statement - no prose, no explanations.
+- Only use tables and columns listed in the schema.
+- SQLite syntax only.
+- Read-only queries: never modify the database.
+{examples}""",
+)
+
+
+def variant_for(key: str, n: int) -> int:
+    """Deterministic instruction-variant choice for one example key.
+
+    Same key + same n => same variant, so training and inference agree
+    without either side consulting the other.
+    """
+    if n <= 1:
+        return 0
+    return int(hashlib.sha1(key.encode("utf-8")).hexdigest()[:8], 16) % n
+
+
+def _system(schema: str, few_shot: str = "", variant: int = 0) -> str:
+    instructions = INSTRUCTION_VARIANTS[variant % len(INSTRUCTION_VARIANTS)]
     examples = f"\nExamples:\n{few_shot.strip()}\n" if few_shot.strip() else ""
-    return INSTRUCTIONS.format(examples=examples) + f"\nSchema:\n{schema}"
+    return instructions.format(examples=examples) + f"\nSchema:\n{schema}"
 
 
 def build_messages(
@@ -28,10 +77,11 @@ def build_messages(
     schema: str,
     *,
     few_shot: str = "",
+    variant: int = 0,
 ) -> list[dict[str, str]]:
     """Chat messages for text-to-SQL generation."""
     return [
-        {"role": "system", "content": _system(schema, few_shot)},
+        {"role": "system", "content": _system(schema, few_shot, variant)},
         {"role": "user", "content": question},
     ]
 
@@ -74,6 +124,9 @@ def build_repair_messages(
     schema: str,
     sql: str,
     feedback: str,
+    *,
+    few_shot: str = "",
+    variant: int = 0,
 ) -> list[dict[str, str]]:
     """Chat messages for one bounded repair attempt (cell D).
 
@@ -86,6 +139,6 @@ def build_repair_messages(
         f"Problem: {feedback}\nReturn corrected SQL only."
     )
     return [
-        {"role": "system", "content": _system(schema)},
+        {"role": "system", "content": _system(schema, few_shot, variant)},
         {"role": "user", "content": user},
     ]

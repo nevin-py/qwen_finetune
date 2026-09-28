@@ -3,6 +3,11 @@
 Verbatim ``CREATE TABLE`` statements from ``sqlite_master`` are used rather
 than a re-serialized model: they are lossless (types, PK, FK, CHECK all
 preserved) and need no transformation logic to maintain.
+
+Optionally appends value-level context (checklist 3.3): per-table row counts
+and up to ``n_samples`` non-null example values per column, read from the
+database content only — never from any gold answer. All output is
+deterministic (row-count exact; samples ordered by value).
 """
 from __future__ import annotations
 
@@ -10,15 +15,65 @@ import sqlite3
 from pathlib import Path
 
 _EXCLUDE = "name NOT LIKE 'sqlite_%' AND type = 'table'"
+_MAX_VALUE_CHARS = 40
 
 
-def schema_text(db_path: str | Path) -> str:
-    """Return DDL for all user tables, ordered by name for determinism."""
+def _quote_ident(name: str) -> str:
+    return '"' + name.replace('"', '""') + '"'
+
+
+def _fmt_value(v: object) -> str:
+    s = str(v).replace("\n", " ").replace("\r", " ")
+    return s if len(s) <= _MAX_VALUE_CHARS else s[: _MAX_VALUE_CHARS - 1] + "…"
+
+
+def schema_text(db_path: str | Path, *, samples: bool = False,
+                n_samples: int = 3) -> str:
+    """Return DDL for all user tables, ordered by name for determinism.
+
+    With ``samples=True`` each table's DDL is followed by its row count and
+    per-column example values (``ORDER BY value`` for determinism).
+    """
     con = sqlite3.connect(f"file:{Path(db_path).resolve()}?mode=ro", uri=True)
     try:
         rows = con.execute(
-            f"SELECT sql FROM sqlite_master WHERE {_EXCLUDE} ORDER BY name"
+            f"SELECT name, sql FROM sqlite_master WHERE {_EXCLUDE} ORDER BY name"
         ).fetchall()
+        blocks: list[str] = []
+        for name, ddl in rows:
+            if not ddl:
+                continue
+            block = ddl.rstrip(";")
+            if samples:
+                block += _sample_section(con, name, n_samples)
+            blocks.append(block)
+        return "\n".join(blocks)
     finally:
         con.close()
-    return "\n".join(ddl.rstrip(";") for (ddl,) in rows if ddl)
+
+
+def _sample_section(con: sqlite3.Connection, table: str, n_samples: int) -> str:
+    ident = _quote_ident(table)
+    parts: list[str] = []
+    try:
+        (n,) = con.execute(f"SELECT COUNT(*) FROM {ident}").fetchone()
+        parts.append(f"-- rows: {n}")
+    except sqlite3.Error:
+        return ""
+    try:
+        cols = [r[1] for r in con.execute(
+            f"PRAGMA table_info({ident})")]
+    except sqlite3.Error:
+        cols = []
+    for col in cols:
+        qcol = _quote_ident(col)
+        try:
+            vals = con.execute(
+                f"SELECT DISTINCT {qcol} FROM {ident} WHERE {qcol} IS NOT NULL "
+                f"ORDER BY 1 LIMIT {int(n_samples)}").fetchall()
+        except sqlite3.Error:
+            continue
+        if vals:
+            shown = ", ".join(_fmt_value(v) for (v,) in vals)
+            parts.append(f"-- {col} examples: {shown}")
+    return "\n" + "\n".join(parts) if parts else ""
