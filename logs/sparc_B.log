@@ -1,0 +1,15 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]Loading weights:   0%|          | 1/338 [00:00<01:23,  4.04it/s]Loading weights:   5%|▌         | 17/338 [00:00<00:05, 59.80it/s]Loading weights:  12%|█▏        | 41/338 [00:00<00:02, 116.58it/s]Loading weights:  22%|██▏       | 75/338 [00:00<00:01, 179.44it/s]Loading weights:  28%|██▊       | 96/338 [00:00<00:01, 155.87it/s]Loading weights:  36%|███▋      | 123/338 [00:00<00:01, 184.07it/s]Loading weights:  44%|████▍     | 148/338 [00:00<00:00, 199.61it/s]Loading weights:  51%|█████     | 173/338 [00:01<00:00, 211.40it/s]Loading weights:  61%|██████    | 207/338 [00:01<00:00, 242.42it/s]Loading weights:  69%|██████▉   | 233/338 [00:01<00:00, 230.52it/s]Loading weights:  79%|███████▉  | 267/338 [00:01<00:00, 254.66it/s]Loading weights:  87%|████████▋ | 294/338 [00:01<00:00, 248.04it/s]Loading weights:  97%|█████████▋| 327/338 [00:01<00:00, 263.96it/s]Loading weights: 100%|██████████| 338/338 [00:01<00:00, 204.32it/s]
+[100/1203] 113s
+[200/1203] 256s
+[300/1203] 396s
+[400/1203] 519s
+[500/1203] 666s
+[600/1203] 806s
+[700/1203] 892s
+[800/1203] 992s
+[900/1203] 1098s
+[1000/1203] 1219s
+[1100/1203] 1379s
+[1200/1203] 1566s
+wrote /home/ariva/work/qwen_finetune/reports/sparc_B_dev.jsonl (1203 turns, 1569s)

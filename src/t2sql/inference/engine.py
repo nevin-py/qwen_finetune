@@ -43,6 +43,10 @@ class LLM:
                 bnb_4bit_quant_type="nf4",
                 bnb_4bit_compute_dtype=torch.float16,
             )
+        else:
+            # unquantized path (design §16 comparisons): bf16 on GPU, fp32 on CPU
+            kwargs["torch_dtype"] = (torch.bfloat16 if torch.cuda.is_available()
+                                     else torch.float32)
         self.model = AutoModelForCausalLM.from_pretrained(model_id, **kwargs)
         if adapter:
             from peft import PeftModel
