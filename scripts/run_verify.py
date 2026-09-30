@@ -55,7 +55,11 @@ def main() -> None:
     schema_cache: dict[str, str] = {}
     sandboxes: dict[str, Sandbox] = {}
     out_path = Path(args.out).resolve()
-    weights = json.loads(Path(args.weights).read_text()) if args.weights else None
+    if args.weights:
+        raw = json.loads(Path(args.weights).read_text())
+        weights = raw.get("tuned_weights", raw)   # accept tuner payload or flat dict
+    else:
+        weights = None
     few_shot = Path(args.few_shot_file).read_text() if args.few_shot_file else ""
     t_start = time.time()
 

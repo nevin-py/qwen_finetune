@@ -1,0 +1,14 @@
+{
+  "n": 100,
+  "scored": 100,
+  "skipped": 0,
+  "accuracy": 0.53,
+  "exact_match": 0.29,
+  "by_difficulty": {},
+  "pred_errors": {
+    "operational": 1,
+    "no_such_column": 23,
+    "no_such_table": 2
+  }
+}
+wrote reports/eval_A_val_n100_v2up.json

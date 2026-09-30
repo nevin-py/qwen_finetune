@@ -24,6 +24,8 @@ from t2sql.sandbox.executor import Sandbox
 from t2sql.verifier.features import extract_features, result_signature
 from t2sql.verifier.scorer import score
 
+_MIN_MARGIN = 0.1   # val-tuned score margin for accepting a repair (checklist 4.6)
+
 
 def repair_item(llm, sandbox, schema: str, rec: dict, *, max_iterations: int,
                 max_new_tokens: int = 512, weights: dict | None = None,
@@ -31,9 +33,11 @@ def repair_item(llm, sandbox, schema: str, rec: dict, *, max_iterations: int,
     """Bounded repair loop for one flagged record (cell D).
 
     Mutates ``rec`` in place (``repairs`` log, and on replacement
-    ``prediction``/``verifier_score``). The verifier score is the sole judge:
-    a repair replaces the current best only with a strictly higher score;
-    an identical regeneration stops the loop. Returns (attempts, replacements).
+    ``prediction``/``verifier_score``). A repair replaces the current best only
+    if it clears the val-tuned score margin AND does not contradict the
+    candidate-pool majority signature (checklist 4.6 — replay on val showed
+    the bare score gate was net-negative); an identical regeneration stops
+    the loop. Returns (attempts, replacements).
     """
     best = max(rec["candidates"], key=lambda c: c["score"])
     rec["repairs"] = []
@@ -74,11 +78,15 @@ def repair_item(llm, sandbox, schema: str, rec: dict, *, max_iterations: int,
             duration_ms=res_new.duration_ms,
             consistency=((sig_counts.get(sig_new, 0) + 1) / (k + 1)) if res_new.ok else 0.0)
         new_score = score(feats_new, weights)
-        is_better = new_score > cur["score"]
+        pool_disagrees = bool(
+            sig_new and majority_n >= (k + 1) // 2 and majority_sig != sig_new)
+        is_better = (new_score >= cur["score"] + _MIN_MARGIN
+                     and not pool_disagrees)
         rec["repairs"].append({
             "sql": new_sql, "score": round(new_score, 4),
             "executed": res_new.ok, "error": res_new.error,
             "feedback": feedback, "replaced": is_better,
+            "pool_veto": pool_disagrees,
         })
         attempts += 1
         if is_better:
@@ -113,7 +121,11 @@ def main() -> None:
 
     records = [json.loads(line) for line in Path(args.cfile).open()]
     llm = LLM(args.model, adapter=args.adapter)
-    weights = json.loads(Path(args.weights).read_text()) if args.weights else None
+    if args.weights:
+        raw = json.loads(Path(args.weights).read_text())
+        weights = raw.get("tuned_weights", raw)
+    else:
+        weights = None
     few_shot = Path(args.few_shot_file).read_text() if args.few_shot_file else ""
     schema_cache: dict[str, str] = {}
     sandboxes: dict[str, Sandbox] = {}
