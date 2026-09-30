@@ -67,7 +67,8 @@ def main() -> None:
             fh.write(json.dumps({"index": index, "db_id": db_id,
                                  "question": item["question"],
                                  "prediction": pred}) + "\n")
-            print(f"[{i + 1}/{len(sample)}] {db_id}: {pred[:80]}", flush=True)
+            shown = pred if len(pred) <= 80 else pred[:80] + "…"
+            print(f"[{i + 1}/{len(sample)}] {db_id}: {shown}", flush=True)
 
     peak = torch.cuda.max_memory_allocated() / 2**30 if torch.cuda.is_available() else 0
     print(f"wrote {out_path.relative_to(ROOT)} in {time.time() - t_start:.0f}s, "
