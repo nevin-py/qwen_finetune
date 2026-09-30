@@ -16,6 +16,7 @@ from pathlib import Path
 
 _EXCLUDE = "name NOT LIKE 'sqlite_%' AND type = 'table'"
 _MAX_VALUE_CHARS = 40
+SAMPLE_LINE_BUDGET = 30   # sample lines per schema (keeps prompts in --max-len)
 
 
 def _quote_ident(name: str) -> str:
@@ -28,11 +29,14 @@ def _fmt_value(v: object) -> str:
 
 
 def schema_text(db_path: str | Path, *, samples: bool = False,
-                n_samples: int = 3) -> str:
+                n_samples: int = 3,
+                sample_line_budget: int = SAMPLE_LINE_BUDGET) -> str:
     """Return DDL for all user tables, ordered by name for determinism.
 
     With ``samples=True`` each table's DDL is followed by its row count and
-    per-column example values (``ORDER BY value`` for determinism).
+    per-column example values (``ORDER BY value`` for determinism). Sample
+    lines are capped globally by ``sample_line_budget`` so prompt size stays
+    bounded regardless of schema width.
     """
     con = sqlite3.connect(f"file:{Path(db_path).resolve()}?mode=ro", uri=True)
     try:
@@ -40,32 +44,40 @@ def schema_text(db_path: str | Path, *, samples: bool = False,
             f"SELECT name, sql FROM sqlite_master WHERE {_EXCLUDE} ORDER BY name"
         ).fetchall()
         blocks: list[str] = []
+        budget = sample_line_budget
         for name, ddl in rows:
             if not ddl:
                 continue
             block = ddl.rstrip(";")
-            if samples:
-                block += _sample_section(con, name, n_samples)
+            if samples and budget > 0:
+                section, used = _sample_section(con, name, n_samples, budget)
+                budget -= used
+                block += section
             blocks.append(block)
         return "\n".join(blocks)
     finally:
         con.close()
 
 
-def _sample_section(con: sqlite3.Connection, table: str, n_samples: int) -> str:
+def _sample_section(con: sqlite3.Connection, table: str, n_samples: int,
+                    budget: int) -> tuple[str, int]:
     ident = _quote_ident(table)
     parts: list[str] = []
     try:
         (n,) = con.execute(f"SELECT COUNT(*) FROM {ident}").fetchone()
         parts.append(f"-- rows: {n}")
     except sqlite3.Error:
-        return ""
+        return "", 0
+    if len(parts) >= budget:
+        return "\n" + "\n".join(parts), len(parts)
     try:
         cols = [r[1] for r in con.execute(
             f"PRAGMA table_info({ident})")]
     except sqlite3.Error:
         cols = []
     for col in cols:
+        if len(parts) >= budget:
+            break
         qcol = _quote_ident(col)
         try:
             vals = con.execute(
@@ -76,4 +88,4 @@ def _sample_section(con: sqlite3.Connection, table: str, n_samples: int) -> str:
         if vals:
             shown = ", ".join(_fmt_value(v) for (v,) in vals)
             parts.append(f"-- {col} examples: {shown}")
-    return "\n" + "\n".join(parts) if parts else ""
+    return "\n" + "\n".join(parts), len(parts)

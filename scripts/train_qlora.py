@@ -29,7 +29,7 @@ from trl import SFTConfig, SFTTrainer
 from t2sql.eval.harness import evaluate
 from t2sql.inference.engine import extract_sql
 from t2sql.prompts.schema import schema_text
-from t2sql.prompts.template import build_messages
+from t2sql.prompts.template import build_messages, variant_for
 from t2sql.training.data import load_examples
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -71,13 +71,17 @@ class ValProbe(TrainerCallback):
     """
 
     def __init__(self, tokenizer, val_items: list[dict], db_dir: Path,
-                 n: int, out_dir: Path):
+                 n: int, out_dir: Path, *, prompt_variants: int = 1,
+                 few_shot: str = "", schema_samples: bool = False):
         self.tok = tokenizer
         self.items = val_items[:n]
         self.db_dir = db_dir
         self.enabled = n > 0 and bool(self.items)
         self.out_dir = out_dir
         self.best_dir = out_dir / "adapter_best"
+        self.prompt_variants = prompt_variants
+        self.few_shot = few_shot
+        self.schema_samples = schema_samples
         self.model = None  # set after trainer construction
         self.trainer = None
         self.schema_cache: dict[str, str] = {}
@@ -88,7 +92,7 @@ class ValProbe(TrainerCallback):
     def _schema(self, db_id: str) -> str:
         if db_id not in self.schema_cache:
             p = self.db_dir / db_id / f"{db_id}.sqlite"
-            self.schema_cache[db_id] = schema_text(p)
+            self.schema_cache[db_id] = schema_text(p, samples=self.schema_samples)
         return self.schema_cache[db_id]
 
     @torch.inference_mode()
@@ -98,7 +102,10 @@ class ValProbe(TrainerCallback):
         model.eval()
         preds = []
         for j, item in enumerate(self.items):
-            msgs = build_messages(item["question"], self._schema(item["db_id"]))
+            msgs = build_messages(
+                item["question"], self._schema(item["db_id"]),
+                few_shot=self.few_shot,
+                variant=variant_for(item["question"], self.prompt_variants))
             ids = chat_ids(tok, msgs, generation_prompt=True)
             x = torch.tensor([ids], device=model.device)
             out = model.generate(x, max_new_tokens=256, do_sample=False,
@@ -155,6 +162,12 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--limit", type=int, default=0, help="debug: first N examples")
     ap.add_argument("--max-steps", type=int, default=0, help="debug: override schedule")
     ap.add_argument("--resume", action="store_true")
+    ap.add_argument("--prompt-variants", type=int, default=1,
+                    help="instruction variants in play (match build_training_set)")
+    ap.add_argument("--few-shot-file", default=None,
+                    help="few-shot block used by training data (match build)")
+    ap.add_argument("--schema-samples", action="store_true",
+                    help="row counts + example values in val prompts (match build)")
     return ap.parse_args()
 
 
@@ -223,10 +236,13 @@ def main() -> None:
     val_raw = json.loads((ROOT / "data" / "splits" / "val.json").read_text()) \
         [: args.val_n] if args.val_n > 0 else []
     val_messages: list[dict] = []
+    few_shot = Path(args.few_shot_file).read_text() if args.few_shot_file else ""
     if val_raw:
         from t2sql.training.data import build_training_examples
         val_messages = build_training_examples(
-            val_raw, ROOT / "data" / "spider" / "database")
+            val_raw, ROOT / "data" / "spider" / "database",
+            prompt_variants=args.prompt_variants, few_shot=few_shot,
+            samples=args.schema_samples)
 
     conf = SFTConfig(
         output_dir=str(out_dir),
@@ -254,7 +270,9 @@ def main() -> None:
         report_to=[],   # curves go to train_log.csv via VramLogger
     )
     probe = ValProbe(tokenizer, val_raw, ROOT / "data" / "spider" / "database",
-                     args.exec_eval_n if val_messages else 0, out_dir)
+                     args.exec_eval_n if val_messages else 0, out_dir,
+                     prompt_variants=args.prompt_variants, few_shot=few_shot,
+                     schema_samples=args.schema_samples)
     trainer = SFTTrainer(
         model=model,
         args=conf,
