@@ -1,0 +1,29 @@
+{
+  "n": 1203,
+  "scored": 1202,
+  "skipped": 1,
+  "accuracy": 0.6015,
+  "exact_match": 0.3827,
+  "by_difficulty": {},
+  "pred_errors": {
+    "no_such_column": 62,
+    "operational": 6,
+    "no_such_table": 9,
+    "syntax": 1
+  },
+  "conversation": {
+    "turns_scored": 1203,
+    "turn_accuracy": 0.601,
+    "query_consistency": 0.601,
+    "per_turn_accuracy": {
+      "1": 0.7014,
+      "2": 0.5829,
+      "3": 0.5111,
+      "4": 0.4886,
+      ">4": 0.0
+    },
+    "interaction_accuracy": 0.3081,
+    "average_progress": 0.6128,
+    "n_dialogues": 422
+  }
+}
