@@ -1,0 +1,364 @@
+{
+  "cell": "A",
+  "dataset": "bird",
+  "n": 1534,
+  "scored": 1532,
+  "accuracy": 0.2128,
+  "accuracy_ci95": [
+    0.1926,
+    0.2324
+  ],
+  "exact_match": 0.0339,
+  "exec_valid_rate": 0.4654,
+  "pred_errors": {
+    "syntax": 21,
+    "no_such_column": 643,
+    "operational": 17,
+    "no_such_table": 93,
+    "timeout": 1,
+    "ambiguous_column": 7,
+    "no_such_function": 37
+  },
+  "by_difficulty": {
+    "challenging": 0.0694,
+    "moderate": 0.1274,
+    "simple": 0.2778
+  },
+  "failure_taxonomy": {
+    "no_such_column": 643,
+    "multiple_clauses": 324,
+    "no_such_table": 93,
+    "filter": 41,
+    "no_such_function": 37,
+    "syntax": 21,
+    "operational": 17,
+    "semantic_mismatch": 9,
+    "ambiguous_column": 7,
+    "agg": 3,
+    "ordering": 3,
+    "join_condition": 3,
+    "tables": 3,
+    "function": 1,
+    "timeout": 1
+  },
+  "taxonomy_examples": {
+    "syntax": [
+      {
+        "index": 0,
+        "pred": "SELECT MAX(`Free Meal Count (K-12)`) / MAX(Enrollment (K-12)) FROM frpm WHERE County Name  =  \"Alameda\"",
+        "gold": "SELECT `Free Meal Count (K-12)` / `Enrollment (K-12)` FROM frpm WHERE `County Name` = 'Alameda' ORDER BY (CAST(`Free Meal Count (K-12)` AS REAL) / `Enrollment (",
+        "differs": []
+      },
+      {
+        "index": 28,
+        "pred": "with an average difference above the computed average.\n\nHere is the corresponding SQL query:\n\n```sql\nSELECT T2.DOC ,  AVG(T1.Enrollment_K12 - T1.Enrollment_Ages",
+        "gold": "SELECT T2.School, T2.DOC FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.FundingType = 'Locally funded' AND (T1.`Enrollment (K-12)`",
+        "differs": []
+      },
+      {
+        "index": 30,
+        "pred": "SELECT DISTINCT T1.city FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode  =  T2.CDSCode WHERE T1.`Academic Year`  =  \"2014-2015\" AND T1.District Type  =  ",
+        "gold": "SELECT T2.City FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode GROUP BY T2.City ORDER BY SUM(T1.`Enrollment (K-12)`) ASC LIMIT 5",
+        "differs": []
+      }
+    ],
+    "no_such_column": [
+      {
+        "index": 1,
+        "pred": "SELECT T1.FreeMealCount_Ages_5_17 / T1.Enrollment_Ages_5_17 FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode  =  T2.CDSCode WHERE T2.School_Type  =  \"Cont",
+        "gold": "SELECT `Free Meal Count (Ages 5-17)` / `Enrollment (Ages 5-17)` FROM frpm WHERE `Educational Option Type` = 'Continuation School' AND `Free Meal Count (Ages 5-1",
+        "differs": []
+      },
+      {
+        "index": 2,
+        "pred": "SELECT DISTINCT T1.Zip FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode  =  T2.CDSCode WHERE T2.Charter  =  1 AND T2.County  =  \"Fresno County Office of E",
+        "gold": "SELECT T2.Zip FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T1.`District Name` = 'Fresno County Office of Education' AND T1.`Charter",
+        "differs": []
+      },
+      {
+        "index": 3,
+        "pred": "SELECT T1.MailingStreet FROM schools AS T1 INNER JOIN frpm AS T2 ON T1.CDSCode  =  T2.CDSCode WHERE T2.`2013-14 CALPADS Fall 1 Certification Status`  =  1 ORDER",
+        "gold": "SELECT T2.MailStreet FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode ORDER BY T1.`FRPM Count (K-12)` DESC LIMIT 1",
+        "differs": []
+      }
+    ],
+    "multiple_clauses": [
+      {
+        "index": 6,
+        "pred": "SELECT DISTINCT T1.school FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode  =  T2.cds WHERE T2.NumGE1500  >  500 AND (T1.Magnet  =  1 OR T1.GSoffered",
+        "gold": "SELECT T2.School FROM satscores AS T1 INNER JOIN schools AS T2 ON T1.cds = T2.CDSCode WHERE T2.Magnet = 1 AND T1.NumTstTakr > 500",
+        "differs": [
+          "filter",
+          "join_condition"
+        ]
+      },
+      {
+        "index": 7,
+        "pred": "SELECT T1.phone FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode  =  T2.cds WHERE T2.AvgScrMath  >  1500 ORDER BY T2.NumTstTakr DESC LIMIT 1",
+        "gold": "SELECT T2.Phone FROM satscores AS T1 INNER JOIN schools AS T2 ON T1.cds = T2.CDSCode ORDER BY T1.NumGE1500 DESC LIMIT 1",
+        "differs": [
+          "filter",
+          "join_condition",
+          "ordering"
+        ]
+      },
+      {
+        "index": 13,
+        "pred": "SELECT T1.phone FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode  =  T2.cds ORDER BY T2.NumGE1500 / T2.NumTstTakr DESC LIMIT 3",
+        "gold": "SELECT T1.Phone FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds ORDER BY CAST(T2.NumGE1500 AS REAL) / T2.NumTstTakr DESC LIMIT 3",
+        "differs": [
+          "function",
+          "ordering"
+        ]
+      }
+    ],
+    "filter": [
+      {
+        "index": 16,
+        "pred": "SELECT COUNT(*) FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode  =  T2.cds WHERE T2.NumTstTakr  <  100 AND T1.County  =  \"Alameda\"",
+        "gold": "SELECT COUNT(T1.CDSCode) FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds WHERE T1.StatusType = 'Merged' AND T2.NumTstTakr < 100 AND T1.Coun",
+        "differs": [
+          "filter"
+        ]
+      },
+      {
+        "index": 104,
+        "pred": "SELECT T1.date FROM trans AS T1 INNER JOIN account AS T2 ON T1.account_id  =  T2.account_id WHERE T1.amount  =  840 AND T1.date  =  '1998-10-14'",
+        "gold": "SELECT T1.date FROM account AS T1 INNER JOIN trans AS T2 ON T1.account_id = T2.account_id WHERE T2.amount = 840 AND T2.date = '1998-10-14'",
+        "differs": [
+          "filter"
+        ]
+      },
+      {
+        "index": 210,
+        "pred": "SELECT DISTINCT T1.atom_id FROM connected AS T1 JOIN bond AS T2 ON T1.bond_id  =  T2.bond_id WHERE T2.bond_type  =  '-'",
+        "gold": "SELECT T2.atom_id, T2.atom_id2 FROM bond AS T1 INNER JOIN connected AS T2 ON T1.bond_id = T2.bond_id WHERE T1.bond_type = '-'",
+        "differs": [
+          "filter"
+        ]
+      }
+    ],
+    "operational": [
+      {
+        "index": 40,
+        "pred": "SELECT T1.phone FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode  =  T2.cds WHERE T1.district  =  \"Fresno Unified\" ORDER BY AVG(T2.AvgScrRead) ASC LI",
+        "gold": "SELECT T2.Phone FROM satscores AS T1 INNER JOIN schools AS T2 ON T1.cds = T2.CDSCode WHERE T2.District = 'Fresno Unified' AND T1.AvgScrRead IS NOT NULL ORDER BY",
+        "differs": []
+      },
+      {
+        "index": 131,
+        "pred": "SELECT T1.A3 FROM district AS T1 INNER JOIN loan AS T2 ON T1.district_id  =  T2.account_id WHERE T2.status  =  'C' OR T2.status  =  'D' ORDER BY COUNT(*) DESC L",
+        "gold": "SELECT T2.A3 FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN loan AS T3 ON T1.account_id = T3.account_id WHERE T3.sta",
+        "differs": []
+      },
+      {
+        "index": 254,
+        "pred": "SELECT CAST(SUM(CASE WHEN COUNT(atom_id) = (SELECT MAX(COUNT(atom_id)) FROM connected) THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(bond_id) FROM connected",
+        "gold": "SELECT CAST((SELECT COUNT(T1.atom_id) FROM connected AS T1 INNER JOIN bond AS T2 ON T1.bond_id = T2.bond_id GROUP BY T2.bond_type ORDER BY COUNT(T2.bond_id) DES",
+        "differs": []
+      }
+    ],
+    "no_such_table": [
+      {
+        "index": 48,
+        "pred": "SELECT CAST(SUM(CASE WHEN T1.DOC = '52' THEN 1 ELSE 0 END) AS REAL) / SUM(CASE WHEN T1.DOC = '54' THEN 1 ELSE 0 END) FROM schools AS T1 INNER JOIN campuses AS T",
+        "gold": "SELECT CAST(SUM(CASE WHEN DOC = 54 THEN 1 ELSE 0 END) AS REAL) / SUM(CASE WHEN DOC = 52 THEN 1 ELSE 0 END) FROM schools WHERE StatusType = 'Merged' AND County =",
+        "differs": []
+      },
+      {
+        "index": 49,
+        "pred": "SELECT T1.County ,  T1.School ,  T1.ClosedDate FROM schools AS T1 JOIN status AS T2 ON T1.CDSCode  =  T2.CDSCode WHERE T2.StatusType  =  \"Closed\" GROUP BY T1.Co",
+        "gold": "SELECT DISTINCT County, School, ClosedDate FROM schools WHERE County = ( SELECT County FROM schools WHERE StatusType = 'Closed' GROUP BY County ORDER BY COUNT(S",
+        "differs": []
+      },
+      {
+        "index": 54,
+        "pred": "SELECT DISTINCT T1.Mailing_Zip FROM schools AS T1 INNER JOIN administrators AS T2 ON T1.CDSCode  =  T2.School WHERE T2.Administration  =  \"Avetik Atoian\"",
+        "gold": "SELECT School, MailZip FROM schools WHERE AdmFName1 = 'Avetik' AND AdmLName1 = 'Atoian'",
+        "differs": []
+      }
+    ],
+    "function": [
+      {
+        "index": 91,
+        "pred": "SELECT AVG(A12) - AVG(A13) FROM district",
+        "gold": "SELECT DISTINCT IIF(AVG(A13) > AVG(A12), '1996', '1995') FROM district",
+        "differs": [
+          "function"
+        ]
+      }
+    ],
+    "timeout": [
+      {
+        "index": 106,
+        "pred": "SELECT MAX(amount) FROM trans WHERE account IN (SELECT account_id FROM card WHERE issued LIKE '1996-10-21%')",
+        "gold": "SELECT T4.amount FROM card AS T1 JOIN disp AS T2 ON T1.disp_id = T2.disp_id JOIN account AS T3 on T2.account_id = T3.account_id JOIN trans AS T4 on T3.account_i",
+        "differs": []
+      }
+    ],
+    "ambiguous_column": [
+      {
+        "index": 107,
+        "pred": "SELECT T1.gender FROM client AS T1 JOIN district AS T2 ON T1.district_id  =  T2.district_id JOIN (SELECT district_id, AVG(salary) as avg_salary FROM district AS",
+        "gold": "SELECT T2.gender FROM district AS T1 INNER JOIN client AS T2 ON T1.district_id = T2.district_id ORDER BY T1.A11 DESC, T2.birth_date ASC LIMIT 1",
+        "differs": []
+      },
+      {
+        "index": 1084,
+        "pred": "SELECT COUNT(DISTINCT player_api_id) FROM Player_Attributes AS T1 INNER JOIN Player AS T2 ON T1.player_api_id  =  T2.player_api_id WHERE strftime('%Y', T2.birth",
+        "gold": "SELECT COUNT(DISTINCT t1.player_name) FROM Player AS t1 INNER JOIN Player_Attributes AS t2 ON t1.player_api_id = t2.player_api_id WHERE STRFTIME('%Y',t1.birthda",
+        "differs": []
+      },
+      {
+        "index": 1193,
+        "pred": "SELECT COUNT(ID) FROM Patient AS T1 INNER JOIN Examination AS T2 ON T1.ID  =  T2.ID WHERE T2.`ANA Pattern`  !=  'P' AND T1.SEX  =  'F' AND T1.Birthday BETWEEN '",
+        "gold": "SELECT COUNT(DISTINCT T1.ID) FROM Patient AS T1 INNER JOIN Examination AS T2 ON T1.ID = T2.ID WHERE T2.`ANA Pattern` != 'P' AND STRFTIME('%Y', T1.Birthday) BETW",
+        "differs": []
+      }
+    ],
+    "no_such_function": [
+      {
+        "index": 144,
+        "pred": "SELECT AVG(amount) FROM trans WHERE operation  =  'VYBER KARTOU' AND YEAR(date)  =  2021",
+        "gold": "SELECT AVG(T4.amount) FROM card AS T1 INNER JOIN disp AS T2 ON T1.disp_id = T2.disp_id INNER JOIN account AS T3 ON T2.account_id = T3.account_id INNER JOIN tran",
+        "differs": []
+      },
+      {
+        "index": 169,
+        "pred": "SELECT CAST(SUM(CASE WHEN YEAR(trans.date) = 1997 THEN trans.amount ELSE 0 END) - SUM(CASE WHEN YEAR(trans.date) = 1996 THEN trans.amount ELSE 0 END) AS REAL) *",
+        "gold": "SELECT CAST((SUM(CASE WHEN STRFTIME('%Y', T1.date) = '1997' THEN T1.amount ELSE 0 END) - SUM(CASE WHEN STRFTIME('%Y', T1.date) = '1996' THEN T1.amount ELSE 0 EN",
+        "differs": []
+      },
+      {
+        "index": 179,
+        "pred": "SELECT SUM(amount) FROM trans WHERE account_id = 617 AND YEAR(date) = 1998",
+        "gold": "SELECT SUM(T3.amount) FROM client AS T1 INNER JOIN disp AS T4 ON T1.client_id = T4.client_id INNER JOIN account AS T2 ON T4.account_id = T2.account_id INNER JOI",
+        "differs": []
+      }
+    ],
+    "agg": [
+      {
+        "index": 218,
+        "pred": "SELECT CAST(SUM(CASE WHEN T1.element = 'f' THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(DISTINCT T1.molecule_id) FROM atom AS T1 INNER JOIN molecule AS T2 ON T1.mo",
+        "gold": "SELECT CAST(COUNT(DISTINCT CASE WHEN T1.element <> 'f' THEN T2.molecule_id ELSE NULL END) AS REAL) * 100 / COUNT(DISTINCT T2.molecule_id) FROM atom AS T1 INNER ",
+        "differs": [
+          "agg"
+        ]
+      },
+      {
+        "index": 883,
+        "pred": "SELECT COUNT(*) ,  name FROM races WHERE YEAR  =  2005 ORDER BY name DESC",
+        "gold": "SELECT name FROM races WHERE year = 2005 ORDER BY name DESC",
+        "differs": [
+          "agg"
+        ]
+      },
+      {
+        "index": 1137,
+        "pred": "SELECT CAST(SUM(CASE WHEN T1.strength > 80 THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(T1.player_api_id) FROM Player_Attributes AS T1",
+        "gold": "SELECT CAST(COUNT(CASE WHEN strength > 80 AND stamina > 80 THEN id ELSE NULL END) AS REAL) * 100 / COUNT(id) FROM Player_Attributes t",
+        "differs": [
+          "agg"
+        ]
+      }
+    ],
+    "semantic_mismatch": [
+      {
+        "index": 340,
+        "pred": "SELECT name FROM cards WHERE cardKingdomFoilId IS NOT NULL AND cardKingdomId IS NOT NULL",
+        "gold": "SELECT id FROM cards WHERE cardKingdomFoilId IS NOT NULL AND cardKingdomId IS NOT NULL",
+        "differs": []
+      },
+      {
+        "index": 715,
+        "pred": "SELECT T1.UserDisplayName FROM comments AS T1 INNER JOIN users AS T2 ON T1.UserId  =  T2.Id WHERE T1.Score  BETWEEN 1 AND 5 AND T2.DownVotes  =  0",
+        "gold": "SELECT T2.DisplayName FROM comments AS T1 INNER JOIN users AS T2 ON T1.UserId = T2.Id WHERE T1.Score BETWEEN 1 AND 5 AND T2.DownVotes = 0",
+        "differs": []
+      },
+      {
+        "index": 748,
+        "pred": "SELECT T1.eye_colour_id FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.eye_colour_id  =  T2.id WHERE T1.id  =  75",
+        "gold": "SELECT T2.colour FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.eye_colour_id = T2.id WHERE T1.id = 75",
+        "differs": []
+      }
+    ],
+    "ordering": [
+      {
+        "index": 342,
+        "pred": "SELECT name FROM cards ORDER BY faceConvertedManaCost DESC LIMIT 1",
+        "gold": "SELECT name FROM cards ORDER BY faceConvertedManaCost LIMIT 1",
+        "differs": [
+          "ordering"
+        ]
+      },
+      {
+        "index": 961,
+        "pred": "SELECT T1.name ,  T1.year FROM races AS T1 JOIN results AS T2 ON T1.raceid  =  T2.raceid WHERE T2.milliseconds  IS NOT NULL ORDER BY T2.milliseconds ASC LIMIT 1",
+        "gold": "SELECT T1.name, T1.year FROM races AS T1 INNER JOIN results AS T2 on T1.raceId = T2.raceId WHERE T2.milliseconds IS NOT NULL ORDER BY T2.milliseconds LIMIT 1",
+        "differs": [
+          "ordering"
+        ]
+      },
+      {
+        "index": 1021,
+        "pred": "SELECT T1.player_name ,  T1.height FROM Player AS T1 ORDER BY T1.height DESC LIMIT 1",
+        "gold": "SELECT player_name FROM Player ORDER BY height DESC LIMIT 1",
+        "differs": [
+          "ordering"
+        ]
+      }
+    ],
+    "join_condition": [
+      {
+        "index": 370,
+        "pred": "SELECT COUNT(T1.id) FROM cards AS T1 INNER JOIN foreign_data AS T2 ON T1.scryfallId  =  T2.multiverseid WHERE T1.borderColor  =  'borderless' AND T2.language  =",
+        "gold": "SELECT COUNT(T1.id) FROM cards AS T1 INNER JOIN foreign_data AS T2 ON T1.uuid = T2.uuid WHERE T1.borderColor = 'borderless' AND T2.language = 'Russian'",
+        "differs": [
+          "join_condition"
+        ]
+      },
+      {
+        "index": 863,
+        "pred": "SELECT T1.url FROM races AS T1 INNER JOIN seasons AS T2 ON T1.year  =  T2.year WHERE T1.raceId  =  901",
+        "gold": "SELECT T2.url FROM races AS T1 INNER JOIN seasons AS T2 ON T2.year = T1.year WHERE T1.raceId = 901",
+        "differs": [
+          "join_condition"
+        ]
+      },
+      {
+        "index": 875,
+        "pred": "SELECT T1.url FROM races AS T1 INNER JOIN seasons AS T2 ON T1.year  =  T2.year WHERE T1.raceId  =  901",
+        "gold": "SELECT T2.url FROM races AS T1 INNER JOIN seasons AS T2 ON T2.year = T1.year WHERE T1.raceId = 901",
+        "differs": [
+          "join_condition"
+        ]
+      }
+    ],
+    "tables": [
+      {
+        "index": 966,
+        "pred": "SELECT COUNT(DISTINCT driverId) FROM results WHERE raceId = 18",
+        "gold": "SELECT COUNT(driverId) FROM driverStandings WHERE raceId = 18",
+        "differs": [
+          "tables"
+        ]
+      },
+      {
+        "index": 1249,
+        "pred": "SELECT DISTINCT T1.Diagnosis FROM Examination AS T1 INNER JOIN Laboratory AS T2 ON T1.ID  =  T2.ID WHERE T2.`U-PRO`  >=  30",
+        "gold": "SELECT T1.Diagnosis FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE T2.`U-PRO` >= 30",
+        "differs": [
+          "tables"
+        ]
+      },
+      {
+        "index": 1300,
+        "pred": "SELECT T1.Diagnosis FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID  =  T2.ID WHERE T2.TG  <  200 ORDER BY T2.TG DESC LIMIT 1",
+        "gold": "SELECT T1.Diagnosis FROM Examination AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE T2.TG < 200 ORDER BY T2.TG DESC LIMIT 1",
+        "differs": [
+          "tables"
+        ]
+      }
+    ]
+  }
+}

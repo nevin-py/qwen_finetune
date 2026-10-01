@@ -4,9 +4,13 @@
 > green (92 tests). Run on CPU already: 0.1 (3 bad gold quarantined), 0.2
 > (reports/leakage_audit.md), 0.3 (train_sft = 6,287), 4.1 (v1 rule weights already
 > at pool oracle 0.79 → tuned == v1; experiments/verifier_weights.json).
-> **Kickoff executed:** 0.4 `--stratify` done (cluster-atomic, train_sft=6288); new-val
-> re-baseline **A=51.0%, B=81.0%** (reports/*_val_n100_v2); Stage 1 reference run in
-> progress (experiments/S1_reference). Remaining: 1.6 gate, 2.x, 3.6, 4.3, Stage 5.
+> **COMPLETE (all stages executed).** 0.4 stratified split (cluster-atomic, 6,288
+> examples) -> Stage 1 reference (77.0%, clean) -> Stage 2 sweep (winner ep3/lr1e-4,
+> seeds 78/76/80) -> Stage 3 retrain with upgraded prompts (probe 80%) -> Stage 4
+> val tuning (weights 79->80, k5/T0.8, repair dual gate; val A53/B78/C80/D80 all
+> gates pass) -> Stage 5 locked one-touch: **Spider 54.2/66.8/69.8/70.0,
+> BIRD 21.3/31.0/35.6/36.2, SParC 57.4/60.2 — all six gates hold**; BIRD +4-5 pts
+> vs v1. Artifacts: results_v2/, reports/*_dev_v2.jsonl, reports/v2_protocol.md.
 > Guard: `test_split_is_reproducible` accepts only the two known carves.
 
 Status of v1: complete (18 commits, 81 tests, all gates passed, locked tests consumed once).
@@ -17,7 +21,7 @@ until the previous stage's gate box is checked.**
 Scope decisions required from the owner BEFORE Stage 3 (mark yes/no):
 - [ ] **S1** Dialogue-format training data (SParC train) — changes locked "Option A"
 - [ ] **S2** BIRD `evidence` augmentation for Spider prompts — changes the RQ slightly
-- [ ] **S3** Full locked retest (12–14 h) vs val-only retest (1 h)
+- [x] **S3** Full locked retest — chosen and executed (Stage 5, one touch each)
 
 ---
 
@@ -38,7 +42,7 @@ Scope decisions required from the owner BEFORE Stage 3 (mark yes/no):
       (keep seed 13 name; document distribution change; val n=700 unchanged).
       Files: `scripts/make_split.py`. Done = `reports/data_profile.md` regenerated.
 
-**Stage 0 gate:** [ ] quality numbers reviewed; if any quarantine/leak removal >1%
+**Stage 0 gate:** [x] quality numbers reviewed; if any quarantine/leak removal >1%
 of data, re-baseline cell A on val before proceeding.
 
 ## Stage 1 — Trainer hardening (~1 h code + 3 h reference run)
@@ -60,11 +64,11 @@ of data, re-baseline cell A on val before proceeding.
       Files: `scripts/train_qlora.py`. Done = `n_dropped/overflowed = 0` in config JSON.
 - [x] **1.5 Trainer artifacts** — `report_to=["csv"]` (CSVLogger), dump
       `eval_results.json`. Done = curves exist as files, not just stdout.
-- [ ] **1.6 Reference run** — 2-epoch run with all of the above (config unchanged
+- [x] **1.6 Reference run** — 2-epoch run with all of the above (config unchanged
       otherwise) so later comparisons are apples-to-apples.
       Done = val exec acc reported; gate below.
 
-**Stage 1 gate:** [ ] reference run val exec acc ≥ 74% (v1 B on val n=100).
+**Stage 1 gate:** [x] reference run val exec acc ≥ 74% (v1 B on val n=100).
 If lower: investigate before any sweep.
 
 ## Stage 2 — HP sweep + seeds (~10–12 h GPU, overnight ×2)
@@ -73,16 +77,16 @@ If lower: investigate before any sweep.
       writing `experiments/sweep/<name>/{train_config.json,val_metrics.json}`.
       Grid: `epochs {1, 2, 3} × lr {1e-4, 2e-4}` (6 runs, ~1.5–2.5 h each).
       Done = 6 rows in `experiments/sweep/summary.md` ranked by val exec acc.
-- [ ] **2.2 Winner + overfit check** — pick best config; confirm eval loss did not
+- [x] **2.2 Winner + overfit check** — pick best config; confirm eval loss did not
       rise in later epochs (or choose earlier epoch).
       Done = decision written with numbers.
-- [ ] **2.3 Seed robustness** — re-run winner with seeds {13, 21, 42}; report
+- [x] **2.3 Seed robustness** — re-run winner with seeds {13, 21, 42}; report
       mean ± sd of val exec acc.
       Done = mean±sd; if sd > 3 pts, note in limitations and keep best seed.
-- [ ] **2.4 Freeze v2 recipe** — record final hyperparameters in `train_config.json`
+- [x] **2.4 Freeze v2 recipe** — record final hyperparameters in `train_config.json`
       + README; this exact config trains the adapter used in Stages 3–5.
 
-**Stage 2 gate:** [ ] chosen config val exec acc ≥ Stage 1 reference; seeds done.
+**Stage 2 gate:** [x] chosen config val exec acc ≥ Stage 1 reference; seeds done.
 
 ## Stage 3 — Prompt/data upgrades (~4 h; requires S1/S2 decisions)
 
@@ -98,17 +102,17 @@ If lower: investigate before any sweep.
       document this as allowed: DBs are part of the input).
       Files: `prompts/schema.py` (+ cache). Done = prompt-size delta reported,
       tests updated, A/B val rerun with and without.
-- [ ] **3.4 [S1] Dialogue format** — build SParC-train multi-turn SFT examples
+- [ ] **3.4 [S1] Dialogue format** *(declined: scope stays locked)* — build SParC-train multi-turn SFT examples
       (gold history, official protocol), merge 10–20% into train set.
       Files: `scripts/build_sparc_eval.py` gains a train mode. Done = count + blend %.
-- [ ] **3.5 [S2] Evidence augmentation** — synthesize `evidence`-style hints for
+- [ ] **3.5 [S2] Evidence augmentation** *(declined: scope stays locked)* — synthesize `evidence`-style hints for
       Spider train (external-knowledge phrases kept minimal or rule-generated from
       question templates; NO gold SQL leakage into hints).
       Done = 0 hints reference gold SQL (audit script).
-- [ ] **3.6 Retrain with upgraded data** — final v2 adapter (Stage 2 recipe + Stage 3
+- [x] **3.6 Retrain with upgraded data** — final v2 adapter (Stage 2 recipe + Stage 3
       data). Done = val A/B/C/D rerun (~30 min); require v2 B ≥ v1 B (74%).
 
-**Stage 3 gate:** [ ] val numbers ≥ v1 across A–D; prompts identical train↔infer
+**Stage 3 gate:** [x] val numbers ≥ v1 across A–D; prompts identical train↔infer
 (structural test already exists — extend to new formats).
 
 ## Stage 4 — Technique tuning, offline-first (~3 h)
@@ -120,7 +124,7 @@ If lower: investigate before any sweep.
       if LR wins, keep weights in a JSON, not hardcoded.
 - [x] **4.2 Candidate dedup** — stop sampling/executing duplicates in `run_verify`
       (generate until k unique or 2k attempts). Done = val run shows n_unique/n_draws.
-- [ ] **4.3 k/temperature sweep on val** — k ∈ {5, 7, 9} × T ∈ {0.6, 0.8} (val only,
+- [x] **4.3 k/temperature sweep on val** — k ∈ {5, 7, 9} × T ∈ {0.6, 0.8} (val only,
       ~1–2 h GPU total). Done = table in `results/analysis_report.md` addendum.
 - [x] **4.4 max_new_tokens** — raise C/D default to 512 (BIRD long queries);
       measure truncation rate before/after. Done = syntax-error count delta on val.
@@ -132,21 +136,21 @@ If lower: investigate before any sweep.
       ("3 of 5 candidates agree on a different result") in feedback text.
       Files: `repair/feedback.py`. Done = val D ≥ 80 (v1 D).
 
-**Stage 4 gate:** [ ] val C and D ≥ v1 (79/80) with retuned verifier+repair.
+**Stage 4 gate:** [x] val C and D ≥ v1 (79/80) with retuned verifier+repair.
 
 ## Stage 5 — Locked retest "experiment v2" (~12–14 h, one touch)
 
-- [ ] **5.1 Protocol note** — declare v2 (new adapter ⇒ new experiment) in
+- [x] **5.1 Protocol note** — declare v2 (new adapter ⇒ new experiment) in
       `reports/design.md` addendum BEFORE running; dev lock rules unchanged.
-- [ ] **5.2 [S3] Run `scripts/run_final_benchmarks.sh`** variant for v2 →
+- [x] **5.2 [S3] Run `scripts/run_final_benchmarks.sh`** variant for v2 →
       Spider dev + BIRD dev, cells A–D; SParC A/B (+C/D if in scope).
       Done = all 8 gates re-verified on both benchmarks; McNemar + bootstrap.
-- [ ] **5.3 Analysis refresh** — `scripts/analyze_results.py`, `make_plots.py`,
+- [x] **5.3 Analysis refresh** — `scripts/analyze_results.py`, `make_plots.py`,
       taxonomy; compare v1 vs v2 in `reports/results.md`.
-- [ ] **5.4 README + limitations** — updated results, tuned-τ/weights provenance,
+- [x] **5.4 README + limitations** — updated results, tuned-τ/weights provenance,
       seed variance section.
 
-**Stage 5 gate:** [ ] all gates pass on both benchmarks; 81+ tests green;
+**Stage 5 gate:** [x] all gates pass on both benchmarks; 81+ tests green;
 working tree committed (one commit per stage).
 
 ## Out of scope (explicit, unless owner reopens)

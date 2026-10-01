@@ -1,6 +1,50 @@
 # Results (living document)
 
-## FINAL: locked tests, one touch each (Phase 10, n = full splits)
+## EXPERIMENT v2: locked tests, one touch each (n = full splits; prereg: reports/v2_protocol.md)
+
+v2 = stratified split + gold-quarantine + dedup (6,288 train), sweep-frozen
+recipe (epochs=3, lr=1e-4, seed=13, best-probe checkpoint), upgraded prompts
+(4 instruction variants + 2-shot examples + schema sample values), tuned
+verifier weights, k=5/T=0.8, dual repair gate (margin≥0.1 + pool veto).
+Outputs: `results_v2/`, predictions `reports/*_dev_v2.jsonl`.
+
+**Spider official dev (1,034)**
+
+| cell | exec acc | 95% CI | exact match | exec-valid |
+|---|---|---|---|---|
+| A base | 54.2% | [51.3, 57.3] | 29.5% | 77.0% |
+| B +QLoRA | 66.8% | [63.8, 69.7] | 41.2% | 90.5% |
+| C +verifier | 69.8% | [66.9, 72.6] | 41.7% | 96.4% |
+| D +repair | **70.0%** | [67.2, 72.8] | 41.6% | 97.1% |
+
+Paired: A→B +12.6 [180↑/50↓, p<5e-7], B→C +3.0 [43↑/12↓, p=3.3e-5],
+C→D +0.2 [2↑/0↓, p=0.5 n.s.].
+
+**BIRD dev (1,534) — primary held-out benchmark**
+
+| cell | exec acc | 95% CI | exact match | exec-valid |
+|---|---|---|---|---|
+| A base | 21.3% | [19.3, 23.2] | 3.4% | 46.5% |
+| B +QLoRA | 31.0% | [28.8, 33.4] | 2.5% | 65.9% |
+| C +verifier | 35.6% | [33.3, 37.9] | 2.7% | 79.0% |
+| D +repair | **36.2%** | [33.9, 38.6] | 2.7% | 82.0% |
+
+Paired: A→B +9.7 [247↑/98↓, p<5e-7], B→C +4.6 [81↑/11↓, p<5e-7],
+C→D +0.7 [11↑/1↓, **p=0.0063**]. Every gate (B≥A, C≥B, D≥C) holds on
+both locked tests. SParC (eval-only): A 57.4% → B 60.2% turn acc
+[+2.8, p=0.027, 121↑/88↓].
+
+**v2 vs v1 (same locked splits):** Spider A +3.4, B −0.7, C −0.6, D −0.8
+(within noise); **BIRD A +0.2, B +3.6, C +5.2, D +4.7** — the prompt/schema
+upgrades target exactly the OOD weakness; SParC A +1.3, B −1.1.
+Selection ablations: spider B 0.668 / SC-majority 0.700 / C 0.698 / oracle
+0.742; bird 0.310 / 0.343 / 0.356 / **0.405** (~5 pts pool headroom).
+Taxonomy: `no_such_column` collapses A→D (spider 197→29, bird 643→193).
+Plots: `results_v2/plots/fig1..fig6.png`.
+
+---
+
+## v1 FINAL: locked tests, one touch each (Phase 10, n = full splits)
 
 **Spider official dev (1,034) — final locked test**
 

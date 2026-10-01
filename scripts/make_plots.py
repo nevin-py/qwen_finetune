@@ -11,6 +11,7 @@ plus the persisted training log; writes results/plots/*.png (6 figures):
 """
 from __future__ import annotations
 
+import argparse
 import json
 import re
 from pathlib import Path
@@ -20,7 +21,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "results" / "plots"
+RES = ROOT / "results"           # switched by --suffix (results_v2/)
+OUT = RES / "plots"
 CELLS = ["A", "B", "C", "D"]
 COLORS = {"A": "#8da0cb", "B": "#66c2a5", "C": "#fc8d62", "D": "#e78ac3"}
 
@@ -38,7 +40,7 @@ def fig1_matrix():
     datasets = ["spider", "bird"]
     fig, axes = plt.subplots(1, 2, figsize=(8, 3.2), sharey=True)
     for ax, ds in zip(axes, datasets):
-        rows = [(c, load(ROOT / "results" / ds / f"{c}.json")) for c in CELLS]
+        rows = [(c, load(RES / ds / f"{c}.json")) for c in CELLS]
         rows = [(c, r) for c, r in rows if r]
         xs = range(len(rows))
         acc = [r["accuracy"] for _, r in rows]
@@ -60,26 +62,38 @@ def fig1_matrix():
 
 
 def fig2_training_loss():
-    txt = (ROOT / "experiments" / "B" / "train_log.txt").read_text()
-    rows = re.findall(r"\{'loss': '([0-9.]+)'.*?'epoch': '([0-9.]+)'", txt)
-    if not rows:
+    csv_path = ROOT / "experiments" / "B_v2" / "train_log.csv"
+    if RES.name == "results_v2" and csv_path.exists():
+        rows = [l.split(",") for l in csv_path.read_text().splitlines()[1:]]
+        loss = [float(r[1]) for r in rows if len(r) > 1 and r[1]]
+        steps = [int(r[0]) for r in rows if len(r) > 1 and r[1]]
+        x = steps
+        title = "QLoRA fine-tuning v2 (3 epochs, 4,716 steps)"
+    else:
+        txt = (ROOT / "experiments" / "B" / "train_log.txt").read_text()
+        found = re.findall(r"\{'loss': '([0-9.]+)'.*?'epoch': '([0-9.]+)'", txt)
+        if not found:
+            return
+        loss = [float(a) for a, _ in found]
+        x = [float(b) for _, b in found]
+        title = "QLoRA fine-tuning (2 epochs, 3,114 steps)"
+    if not loss:
         return
-    loss = [float(a) for a, _ in rows]
-    epoch = [float(b) for _, b in rows]
     smooth = [sum(loss[max(0, i - 14):i + 1]) / len(loss[max(0, i - 14):i + 1])
               for i in range(len(loss))]
     fig, ax = plt.subplots(figsize=(6, 3.2))
-    ax.plot(epoch, loss, alpha=0.25, color=COLORS["B"], label="logged loss")
-    ax.plot(epoch, smooth, color="black", linewidth=1.6, label="moving avg (15)")
-    ax.set_xlabel("epoch"); ax.set_ylabel("training loss")
-    ax.set_title("QLoRA fine-tuning (2 epochs, 3,114 steps)")
+    ax.plot(x, loss, alpha=0.25, color=COLORS["B"], label="logged loss")
+    ax.plot(x, smooth, color="black", linewidth=1.6, label="moving avg (15)")
+    ax.set_xlabel("epoch" if x[-1] <= 4 else "step")
+    ax.set_ylabel("training loss")
+    ax.set_title(title)
     ax.legend(frameon=False)
     fig.savefig(OUT / "fig2_training_loss.png")
 
 
 def fig3_sparc_turns():
-    a = load(ROOT / "results" / "sparc" / "A.json")
-    b = load(ROOT / "results" / "sparc" / "B.json")
+    a = load(RES / "sparc" / "A.json")
+    b = load(RES / "sparc" / "B.json")
     if not (a and b):
         return
     keys = ["1", "2", "3", "4", ">4"]
@@ -95,10 +109,10 @@ def fig3_sparc_turns():
 
 
 def fig4_taxonomy():
-    cells = [c for c in CELLS if (ROOT / "results" / "bird" / f"{c}.json").exists()]
+    cells = [c for c in CELLS if (RES / "bird" / f"{c}.json").exists()]
     if not cells:
         return
-    data = {c: load(ROOT / "results" / "bird" / f"{c}.json")["failure_taxonomy"]
+    data = {c: load(RES / "bird" / f"{c}.json")["failure_taxonomy"]
             for c in cells}
     cats = sorted({k for d in data.values() for k in d},
                   key=lambda k: -sum(d.get(k, 0) for d in data.values()))[:8]
@@ -119,16 +133,18 @@ def fig4_taxonomy():
 
 def fig5_selection_ablations():
     sets = [ds for ds in ["spider", "bird"]
-            if (ROOT / "results" / "ablations" / f"{ds}.json").exists()]
+            if (RES / "ablations" / f"{ds}.json").exists()]
     if not sets:
         return
     labels = ["greedy (B)", "self-cons.\nmajority", "verifier (C)", "oracle\nceiling"]
     fig, axes = plt.subplots(1, len(sets), figsize=(3.6 * len(sets), 3.2),
                              sharey=True)
     axes = [axes] if len(sets) == 1 else list(axes)
+    pool_note = ""
     for ax, ds in zip(axes, sets):
-        abl = load(ROOT / "results" / "ablations" / f"{ds}.json")
-        c_json = load(ROOT / "results" / ds / "C.json")
+        abl = load(RES / "ablations" / f"{ds}.json")
+        c_json = load(RES / ds / "C.json")
+        pool_note = f"k≈{abl.get('pool_size_mean', 5):.1f}"
         vals = [abl["slots_accuracy"][0], abl["sc_majority_accuracy"],
                 c_json["accuracy"], abl["oracle_pool_accuracy"]]
         ax.bar(range(4), vals, color=[COLORS["B"], "#999999", COLORS["C"],
@@ -138,12 +154,14 @@ def fig5_selection_ablations():
         ax.set_xticks(range(4)); ax.set_xticklabels(labels, fontsize=8)
         ax.set_title(ds); ax.set_ylim(0, 1.0)
     axes[0].set_ylabel("execution accuracy")
-    fig.suptitle("Candidate-selection ablations (k=5 pool)", fontsize=11, y=1.02)
+    fig.suptitle(f"Candidate-selection ablations ({pool_note or 'k=5'} pool)",
+                 fontsize=11, y=1.02)
     fig.savefig(OUT / "fig5_selection_ablations.png")
 
 
 def fig6_resources():
-    res = load(ROOT / "results" / "resource_usage" / "benchmarks.json")
+    res = (load(RES / "resource_usage" / "benchmarks.json")
+           or load(ROOT / "results" / "resource_usage" / "benchmarks.json"))
     if not res:
         return
     cfgs = res["gpu_configs"] + ([res["cpu_config"]] if "cpu_config" in res else [])
@@ -164,6 +182,13 @@ def fig6_resources():
 
 
 def main() -> None:
+    global RES, OUT
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--suffix", default="",
+                    help="results suffix, e.g. _v2 (reads results_v2/)")
+    args = ap.parse_args()
+    RES = ROOT / f"results{args.suffix}"
+    OUT = RES / "plots"
     OUT.mkdir(parents=True, exist_ok=True)
     fig1_matrix(); fig2_training_loss(); fig3_sparc_turns()
     fig4_taxonomy(); fig5_selection_ablations(); fig6_resources()

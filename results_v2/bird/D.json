@@ -1,0 +1,348 @@
+{
+  "cell": "D",
+  "dataset": "bird",
+  "n": 1534,
+  "scored": 1532,
+  "accuracy": 0.3623,
+  "accuracy_ci95": [
+    0.3388,
+    0.3864
+  ],
+  "exact_match": 0.0268,
+  "exec_valid_rate": 0.8205,
+  "pred_errors": {
+    "syntax": 45,
+    "no_such_column": 193,
+    "no_such_function": 17,
+    "no_such_table": 10,
+    "operational": 10
+  },
+  "by_difficulty": {
+    "challenging": 0.1806,
+    "moderate": 0.2117,
+    "simple": 0.4659
+  },
+  "failure_taxonomy": {
+    "multiple_clauses": 600,
+    "no_such_column": 193,
+    "filter": 57,
+    "syntax": 45,
+    "semantic_mismatch": 19,
+    "no_such_function": 17,
+    "no_such_table": 10,
+    "operational": 10,
+    "join_condition": 9,
+    "ordering": 8,
+    "agg": 4,
+    "tables": 2,
+    "group_by": 2,
+    "function": 1
+  },
+  "taxonomy_examples": {
+    "syntax": [
+      {
+        "index": 0,
+        "pred": "SELECT max(`Free Meal Count (K-12)`) / max(Enrollment (K-12)) FROM frpm WHERE County Name  =  \"Alameda\"",
+        "gold": "SELECT `Free Meal Count (K-12)` / `Enrollment (K-12)` FROM frpm WHERE `County Name` = 'Alameda' ORDER BY (CAST(`Free Meal Count (K-12)` AS REAL) / `Enrollment (",
+        "differs": []
+      },
+      {
+        "index": 1,
+        "pred": "SELECT DISTINCT T1.School ,  T1.Eligible_free_rate FROM schools AS T1 JOIN satscores AS T2 ON T1.CDSCode  =  T2.cds WHERE T1.District_type  =  'Continuation Sch",
+        "gold": "SELECT `Free Meal Count (Ages 5-17)` / `Enrollment (Ages 5-17)` FROM frpm WHERE `Educational Option Type` = 'Continuation School' AND `Free Meal Count (Ages 5-1",
+        "differs": []
+      },
+      {
+        "index": 2,
+        "pred": "SELECT DISTINCT T1.Zip FROM schools AS T1 JOIN frpm AS T2 ON T1.CDSCode  =  T2.CDSCode WHERE T2.County Name  =  \"Fresno\" AND T2.Charter School (Y/N)  =  1",
+        "gold": "SELECT T2.Zip FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T1.`District Name` = 'Fresno County Office of Education' AND T1.`Charter",
+        "differs": []
+      }
+    ],
+    "no_such_column": [
+      {
+        "index": 3,
+        "pred": "SELECT mailstreet ,  mailstrabr FROM schools ORDER BY frpmcount_k12 DESC LIMIT 1",
+        "gold": "SELECT T2.MailStreet FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode ORDER BY T1.`FRPM Count (K-12)` DESC LIMIT 1",
+        "differs": []
+      },
+      {
+        "index": 30,
+        "pred": "SELECT city FROM schools ORDER BY enrollment12 LIMIT 5",
+        "gold": "SELECT T2.City FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode GROUP BY T2.City ORDER BY SUM(T1.`Enrollment (K-12)`) ASC LIMIT 5",
+        "differs": []
+      },
+      {
+        "index": 35,
+        "pred": "SELECT T2.admemail1 FROM frpm AS T1 JOIN schools AS T2 ON T1.CDSCode  =  T2.CDSCode WHERE T1.charter_school  =  1 ORDER BY T1.enrollment12 LIMIT 1",
+        "gold": "SELECT T2.AdmEmail1 FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T1.`Charter School (Y/N)` = 1 ORDER BY T1.`Enrollment (K-12)` ASC ",
+        "differs": []
+      }
+    ],
+    "multiple_clauses": [
+      {
+        "index": 6,
+        "pred": "SELECT * FROM schools WHERE Magnet  =  1 OR Magnet = 'Magnet Program'",
+        "gold": "SELECT T2.School FROM satscores AS T1 INNER JOIN schools AS T2 ON T1.cds = T2.CDSCode WHERE T2.Magnet = 1 AND T1.NumTstTakr > 500",
+        "differs": [
+          "filter",
+          "join_condition",
+          "tables"
+        ]
+      },
+      {
+        "index": 8,
+        "pred": "SELECT avgscrread FROM satscores ORDER BY avgscrread DESC LIMIT 1",
+        "gold": "SELECT NumTstTakr FROM satscores WHERE cds = ( SELECT CDSCode FROM frpm ORDER BY `FRPM Count (K-12)` DESC LIMIT 1 )",
+        "differs": [
+          "agg",
+          "filter",
+          "limit",
+          "ordering",
+          "subquery",
+          "tables"
+        ]
+      },
+      {
+        "index": 9,
+        "pred": "SELECT count(*) FROM schools AS T1 JOIN satscores AS T2 ON T1.CDSCode  =  T2.cds WHERE avgscrmath  >  560 INTERSECT SELECT count(*) FROM schools WHERE fundingty",
+        "gold": "SELECT COUNT(T2.`School Code`) FROM satscores AS T1 INNER JOIN frpm AS T2 ON T1.cds = T2.CDSCode WHERE T1.AvgScrMath > 560 AND T2.`Charter Funding Type` = 'Dire",
+        "differs": [
+          "filter",
+          "join_condition",
+          "tables"
+        ]
+      }
+    ],
+    "filter": [
+      {
+        "index": 16,
+        "pred": "SELECT count(*) FROM schools AS T1 JOIN satscores AS T2 ON T1.CDSCode  =  T2.cds WHERE T1.County  =  'Merged Alameda' AND T2.NumTstTakr  <  100",
+        "gold": "SELECT COUNT(T1.CDSCode) FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds WHERE T1.StatusType = 'Merged' AND T2.NumTstTakr < 100 AND T1.Coun",
+        "differs": [
+          "filter"
+        ]
+      },
+      {
+        "index": 56,
+        "pred": "SELECT count(*) FROM schools WHERE mailstate  =  'CA' AND mailcity  =  'San Joaquin'",
+        "gold": "SELECT COUNT(CDSCode) FROM schools WHERE City = 'San Joaquin' AND MailState = 'CA' AND StatusType = 'Active'",
+        "differs": [
+          "filter"
+        ]
+      },
+      {
+        "index": 58,
+        "pred": "SELECT phone ,  ext FROM schools WHERE zip  =  \"95203-3704\"",
+        "gold": "SELECT Phone, Ext, School FROM schools WHERE Zip = '95203-3704'",
+        "differs": [
+          "filter"
+        ]
+      }
+    ],
+    "semantic_mismatch": [
+      {
+        "index": 23,
+        "pred": "SELECT DISTINCT T1.School ,  T1.Street ,  T1.StreetAbr FROM schools AS T1 JOIN frpm AS T2 ON T1.CDSCode  =  T2.CDSCode WHERE T2.`Enrollment (K-12)` - T2.`Enroll",
+        "gold": "SELECT T1.School, T1.Street FROM schools AS T1 INNER JOIN frpm AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.`Enrollment (K-12)` - T2.`Enrollment (Ages 5-17)` > 30",
+        "differs": []
+      },
+      {
+        "index": 69,
+        "pred": "SELECT NCESSchool FROM schools WHERE SOC  =  31",
+        "gold": "SELECT NCESDist FROM schools WHERE SOC = 31",
+        "differs": []
+      },
+      {
+        "index": 147,
+        "pred": "SELECT count(*) FROM client AS T1 JOIN district AS T2 ON T1.district_id  =  T2.district_id WHERE T1.gender  =  'F' AND T2.A3  =  'South Bohemia'",
+        "gold": "SELECT COUNT(T1.client_id) FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.gender = 'F' AND T2.A3 = 'south Bohemia'",
+        "differs": []
+      }
+    ],
+    "no_such_function": [
+      {
+        "index": 29,
+        "pred": "SELECT OpenDate FROM schools WHERE District  =  'First through twelfth-grade' ORDER BY Enrollment (K-12) DESC LIMIT 1",
+        "gold": "SELECT T2.OpenDate FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode ORDER BY T1.`Enrollment (K-12)` DESC LIMIT 1",
+        "differs": []
+      },
+      {
+        "index": 31,
+        "pred": "SELECT avg(`Percent (%) Eligible Free (K-12)`) ,  avg(Enrollment (K-12)) FROM frpm ORDER BY Enrollment (K-12) DESC LIMIT 10",
+        "gold": "SELECT CAST(`Free Meal Count (K-12)` AS REAL) / `Enrollment (K-12)` FROM frpm ORDER BY `Enrollment (K-12)` DESC LIMIT 9, 2",
+        "differs": []
+      },
+      {
+        "index": 263,
+        "pred": "SELECT count(*) ,  element ,  DIVIDE(SUM(CASE WHEN element  =  'cl' THEN 1 ELSE 0 END) ,  count(*)) * 100 FROM atom WHERE bond_type  =  '-' GROUP BY element",
+        "gold": "SELECT CAST(COUNT(CASE WHEN T.element = 'cl' THEN T.atom_id ELSE NULL END) AS REAL) * 100 / COUNT(T.atom_id) FROM ( SELECT T1.atom_id, T1.element FROM atom AS T",
+        "differs": []
+      }
+    ],
+    "no_such_table": [
+      {
+        "index": 54,
+        "pred": "SELECT DISTINCT T1.School ,  T1.MailZip FROM schools AS T1 JOIN adm AS t2 ON T1.CDSCode  =  T2.CDSCode WHERE T2.AdmFName1  =  \"Avetik\" AND T2.AdmLName1  =  \"Ato",
+        "gold": "SELECT School, MailZip FROM schools WHERE AdmFName1 = 'Avetik' AND AdmLName1 = 'Atoian'",
+        "differs": []
+      },
+      {
+        "index": 85,
+        "pred": "SELECT T1.District Code FROM schools AS T1 JOIN users AS T2 ON T1.AdmFName1  =  T2.Fname WHERE T2.Lname  =  'Alusine'",
+        "gold": "SELECT T1.`Free Meal Count (K-12)` * 100 / T1.`Enrollment (K-12)`, T1.`District Code` FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE ",
+        "differs": []
+      },
+      {
+        "index": 94,
+        "pred": "SELECT T1.account_id FROM client AS T1 JOIN salary AS T2 ON T1.client_id  =  T2.client_id WHERE T1.gender  =  'F' ORDER BY T1.birth_date DESC ,  T2.A11 ASC LIMI",
+        "gold": "SELECT T1.account_id , ( SELECT MAX(A11) - MIN(A11) FROM district ) FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN d",
+        "differs": []
+      }
+    ],
+    "tables": [
+      {
+        "index": 80,
+        "pred": "SELECT T2.School ,  T2.Latitude FROM schools AS T1 JOIN schools AS T2 ON T1.CDSCode  =  T2.CDSCode ORDER BY T2.Latitude DESC LIMIT 1",
+        "gold": "SELECT T1.`School Type`, T1.`School Name`, T2.Latitude FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode ORDER BY T2.Latitude DESC LIMIT 1",
+        "differs": [
+          "tables"
+        ]
+      },
+      {
+        "index": 1249,
+        "pred": "SELECT DISTINCT diagnosis FROM examination AS T1 JOIN laboratory AS T2 ON T1.ID  =  T2.ID WHERE T2.`U-PRO` >= 30",
+        "gold": "SELECT T1.Diagnosis FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE T2.`U-PRO` >= 30",
+        "differs": [
+          "tables"
+        ]
+      }
+    ],
+    "operational": [
+      {
+        "index": 92,
+        "pred": "SELECT count(DISTINCT T1.district_id) FROM district AS T1 JOIN client AS T2 ON T1.district_id  =  T2.district_id WHERE T2.gender  =  'F' AND avg(T1.A11) BETWEEN",
+        "gold": "SELECT COUNT(DISTINCT T2.district_id)  FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.gender = 'F' AND T2.A11 BETWEEN 6",
+        "differs": []
+      },
+      {
+        "index": 168,
+        "pred": "SELECT count(*) * 100 / (SELECT count(*) FROM client WHERE district_id IN (SELECT district_id FROM district ORDER BY avg(A11) DESC LIMIT 1)) FROM client WHERE g",
+        "gold": "SELECT CAST(SUM(T2.gender = 'F') AS REAL) * 100 / COUNT(T2.client_id) FROM district AS T1 INNER JOIN client AS T2 ON T1.district_id = T2.district_id WHERE T1.A1",
+        "differs": []
+      },
+      {
+        "index": 231,
+        "pred": "SELECT max(count(bond_type)) ,  T1.label FROM molecule AS T1 JOIN bond AS T2 ON T1.molecule_id  =  T2.molecule_id GROUP BY T1.label",
+        "gold": "SELECT T.bond_type FROM ( SELECT T1.bond_type, COUNT(T1.molecule_id) FROM bond AS T1  WHERE T1.molecule_id = 'TR010' GROUP BY T1.bond_type ORDER BY COUNT(T1.mol",
+        "differs": []
+      }
+    ],
+    "ordering": [
+      {
+        "index": 342,
+        "pred": "SELECT name FROM cards ORDER BY faceConvertedManaCost DESC LIMIT 1",
+        "gold": "SELECT name FROM cards ORDER BY faceConvertedManaCost LIMIT 1",
+        "differs": [
+          "ordering"
+        ]
+      },
+      {
+        "index": 580,
+        "pred": "SELECT T1.DisplayName FROM users AS T1 JOIN badges AS T2 ON T1.Id  =  T2.UserId WHERE T2.Name  =  'Necromancer' ORDER BY T2.Date DESC LIMIT 10",
+        "gold": "SELECT T1.DisplayName FROM users AS T1 INNER JOIN badges AS T2 ON T1.Id = T2.UserId WHERE T2.Name = 'Necromancer' LIMIT 10",
+        "differs": [
+          "ordering"
+        ]
+      },
+      {
+        "index": 1029,
+        "pred": "SELECT T2.buildUpPlaySpeed FROM Team AS T1 JOIN Team_Attributes AS T2 ON T1.team_api_id  =  T2.team_api_id ORDER BY T2.buildUpPlaySpeed DESC LIMIT 4",
+        "gold": "SELECT t1.buildUpPlaySpeed FROM Team_Attributes AS t1 INNER JOIN Team AS t2 ON t1.team_api_id = t2.team_api_id ORDER BY t1.buildUpPlaySpeed ASC LIMIT 4",
+        "differs": [
+          "ordering"
+        ]
+      }
+    ],
+    "join_condition": [
+      {
+        "index": 352,
+        "pred": "SELECT CAST(SUM(CASE WHEN T1.language = \"Chinese Simplified\" THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(*) FROM foreign_data AS T1 INNER JOIN cards AS T2 ON T1.m",
+        "gold": "SELECT CAST(SUM(CASE WHEN T2.language = 'Chinese Simplified' THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(T1.id) FROM cards AS T1 INNER JOIN foreign_data AS T2 ON ",
+        "differs": [
+          "join_condition"
+        ]
+      },
+      {
+        "index": 429,
+        "pred": "SELECT T1.language ,  T2.type FROM set_translations AS T1 JOIN sets AS T2 ON T1.setCode = T2.code WHERE T2.id = 206",
+        "gold": "SELECT T2.language, T1.type FROM sets AS T1 INNER JOIN set_translations AS T2 ON T1.code = T2.setCode WHERE T2.id = 206",
+        "differs": [
+          "join_condition"
+        ]
+      },
+      {
+        "index": 448,
+        "pred": "SELECT t1.type FROM cards AS t1 JOIN foreign_data AS t2 ON t1.uuid  =  t2.uuid WHERE t1.watermark  =  'abzan'",
+        "gold": "SELECT DISTINCT T1.name, T1.type FROM cards AS T1 INNER JOIN foreign_data AS T2 ON T2.uuid = T1.uuid WHERE T1.watermark = 'abzan'",
+        "differs": [
+          "join_condition"
+        ]
+      }
+    ],
+    "agg": [
+      {
+        "index": 698,
+        "pred": "SELECT count(*) ,  sum(answercount) FROM posts WHERE title  =  'Clustering 1D data'",
+        "gold": "SELECT CommentCount, AnswerCount FROM posts WHERE Title = 'Clustering 1D data'",
+        "differs": [
+          "agg"
+        ]
+      },
+      {
+        "index": 883,
+        "pred": "SELECT count(*) ,  name FROM races WHERE YEAR  =  2005 ORDER BY name DESC",
+        "gold": "SELECT name FROM races WHERE year = 2005 ORDER BY name DESC",
+        "differs": [
+          "agg"
+        ]
+      },
+      {
+        "index": 1149,
+        "pred": "SELECT CAST(SUM(Admission = '+') - SUM(Admission = '-') AS REAL) * 100 / COUNT(*) FROM patient WHERE sex = 'M'",
+        "gold": "SELECT CAST(SUM(CASE WHEN Admission = '+' THEN 1 ELSE 0 END) AS REAL) * 100 / SUM(CASE WHEN Admission = '-' THEN 1 ELSE 0 END) FROM Patient WHERE SEX = 'M'",
+        "differs": [
+          "agg"
+        ]
+      }
+    ],
+    "group_by": [
+      {
+        "index": 1388,
+        "pred": "SELECT T1.first_name ,  T1.last_name ,  T2.source FROM member AS T1 JOIN income AS T2 ON T1.member_id  =  T2.link_to_member GROUP BY T1.member_id ORDER BY sum(T",
+        "gold": "SELECT T1.first_name, T1.last_name, T2.source FROM member AS T1 INNER JOIN income AS T2 ON T1.member_id = T2.link_to_member GROUP BY T1.first_name, T1.last_name",
+        "differs": [
+          "group_by"
+        ]
+      },
+      {
+        "index": 1467,
+        "pred": "SELECT sum(T1.spent) ,  T2.event_name FROM budget AS T1 JOIN event AS T2 ON T1.link_to_event  =  T2.event_id WHERE T1.category  =  'Speaker Gifts'",
+        "gold": "SELECT SUM(T1.spent), T2.event_name FROM budget AS T1 INNER JOIN event AS T2 ON T1.link_to_event = T2.event_id WHERE T1.category = 'Speaker Gifts' GROUP BY T2.e",
+        "differs": [
+          "group_by"
+        ]
+      }
+    ],
+    "function": [
+      {
+        "index": 1442,
+        "pred": "SELECT count(*) ,  sum(case when remaining  <  0 then 1 else 0 end) ,  count(*) FROM budget",
+        "gold": "SELECT CAST(SUM(CASE WHEN remaining < 0 THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(budget_id) FROM budget",
+        "differs": [
+          "function"
+        ]
+      }
+    ]
+  }
+}

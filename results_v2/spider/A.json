@@ -1,0 +1,318 @@
+{
+  "cell": "A",
+  "dataset": "spider",
+  "n": 1034,
+  "scored": 1032,
+  "accuracy": 0.5417,
+  "accuracy_ci95": [
+    0.5126,
+    0.5727
+  ],
+  "exact_match": 0.2946,
+  "exec_valid_rate": 0.7703,
+  "pred_errors": {
+    "no_such_column": 197,
+    "no_such_table": 24,
+    "operational": 14,
+    "ambiguous_column": 2
+  },
+  "by_difficulty": {},
+  "failure_taxonomy": {
+    "no_such_column": 197,
+    "multiple_clauses": 140,
+    "semantic_mismatch": 34,
+    "ordering": 26,
+    "no_such_table": 24,
+    "filter": 18,
+    "operational": 14,
+    "tables": 6,
+    "join_condition": 5,
+    "group_by": 4,
+    "agg": 3,
+    "ambiguous_column": 2
+  },
+  "taxonomy_examples": {
+    "semantic_mismatch": [
+      {
+        "index": 2,
+        "pred": "SELECT name ,  country ,  age FROM singer ORDER BY age DESC",
+        "gold": "SELECT name ,  country ,  age FROM singer ORDER BY age DESC",
+        "differs": []
+      },
+      {
+        "index": 3,
+        "pred": "SELECT name ,  country ,  age FROM singer ORDER BY age DESC",
+        "gold": "SELECT name ,  country ,  age FROM singer ORDER BY age DESC",
+        "differs": []
+      },
+      {
+        "index": 273,
+        "pred": "SELECT name ,  location ,  district FROM shop ORDER BY number_products DESC",
+        "gold": "SELECT name ,  LOCATION ,  district FROM shop ORDER BY number_products DESC",
+        "differs": []
+      }
+    ],
+    "multiple_clauses": [
+      {
+        "index": 6,
+        "pred": "SELECT T1.song_name ,  T1.song_release_year FROM singer AS T1 JOIN singer_in_concert AS T2 ON T1.singer_id  =  T2.singer_id ORDER BY T1.age ASC LIMIT 1",
+        "gold": "SELECT song_name ,  song_release_year FROM singer ORDER BY age LIMIT 1",
+        "differs": [
+          "join_condition",
+          "ordering",
+          "tables"
+        ]
+      },
+      {
+        "index": 7,
+        "pred": "SELECT T1.song_name ,  T1.song_release_year FROM singer AS T1 JOIN singer_in_concert AS T2 ON T1.singer_id  =  T2.singer_id ORDER BY T1.age ASC LIMIT 1",
+        "gold": "SELECT song_name ,  song_release_year FROM singer ORDER BY age LIMIT 1",
+        "differs": [
+          "join_condition",
+          "ordering",
+          "tables"
+        ]
+      },
+      {
+        "index": 10,
+        "pred": "SELECT T1.Country ,  COUNT(T1.Singer_ID) FROM singer AS T1 JOIN singer_in_concert AS T2 ON T1.Singer_ID  =  T2.Singer_ID GROUP BY T1.Country",
+        "gold": "SELECT country ,  count(*) FROM singer GROUP BY country",
+        "differs": [
+          "group_by",
+          "join_condition",
+          "tables"
+        ]
+      }
+    ],
+    "group_by": [
+      {
+        "index": 9,
+        "pred": "SELECT country FROM singer WHERE age  >  20 GROUP BY country",
+        "gold": "SELECT DISTINCT country FROM singer WHERE age  >  20",
+        "differs": [
+          "group_by"
+        ]
+      },
+      {
+        "index": 140,
+        "pred": "SELECT MAX(Accelerate) FROM cars_data",
+        "gold": "SELECT max(Accelerate) ,  Cylinders FROM CARS_DATA GROUP BY Cylinders;",
+        "differs": [
+          "group_by"
+        ]
+      },
+      {
+        "index": 420,
+        "pred": "SELECT T1.ID ,  T1.Name ,  T1.Level_of_membership FROM visitor AS T1 JOIN visit AS T2 ON T1.ID  =  T2.visitor_ID GROUP BY T1.ID ORDER BY SUM(T2.Total_spent) DES",
+        "gold": "SELECT t2.visitor_id ,  t1.name ,  t1.Level_of_membership FROM visitor AS t1 JOIN visit AS t2 ON t1.id  =  t2.visitor_id GROUP BY t2.visitor_id ORDER BY sum(t2.",
+        "differs": [
+          "group_by"
+        ]
+      }
+    ],
+    "agg": [
+      {
+        "index": 16,
+        "pred": "SELECT MAX(capacity), AVG(Average) FROM stadium",
+        "gold": "select max(capacity), average from stadium",
+        "differs": [
+          "agg"
+        ]
+      },
+      {
+        "index": 481,
+        "pred": "SELECT YEAR FROM matches GROUP BY YEAR",
+        "gold": "SELECT count(*) ,  YEAR FROM matches GROUP BY YEAR",
+        "differs": [
+          "agg"
+        ]
+      },
+      {
+        "index": 482,
+        "pred": "SELECT YEAR FROM matches GROUP BY YEAR",
+        "gold": "SELECT count(*) ,  YEAR FROM matches GROUP BY YEAR",
+        "differs": [
+          "agg"
+        ]
+      }
+    ],
+    "ordering": [
+      {
+        "index": 18,
+        "pred": "SELECT T1.name ,  T1.capacity FROM stadium AS T1 ORDER BY T1.average DESC LIMIT 1",
+        "gold": "SELECT name ,  capacity FROM stadium ORDER BY average DESC LIMIT 1",
+        "differs": [
+          "ordering"
+        ]
+      },
+      {
+        "index": 19,
+        "pred": "SELECT T1.name ,  T1.capacity FROM stadium AS T1 ORDER BY T1.average DESC LIMIT 1",
+        "gold": "SELECT name ,  capacity FROM stadium ORDER BY average DESC LIMIT 1",
+        "differs": [
+          "ordering"
+        ]
+      },
+      {
+        "index": 67,
+        "pred": "SELECT PetType ,  weight FROM Pets ORDER BY pet_age ASC LIMIT 1",
+        "gold": "SELECT pettype ,  weight FROM pets ORDER BY pet_age LIMIT 1",
+        "differs": [
+          "ordering"
+        ]
+      }
+    ],
+    "no_such_column": [
+      {
+        "index": 22,
+        "pred": "SELECT T1.name ,  COUNT(T2.concert_id) FROM stadium AS T1 JOIN singer_in_concert AS T2 ON T1.stadium_id  =  T2.stadium_id GROUP BY T1.stadium_id",
+        "gold": "SELECT T2.name ,  count(*) FROM concert AS T1 JOIN stadium AS T2 ON T1.stadium_id  =  T2.stadium_id GROUP BY T1.stadium_id",
+        "differs": []
+      },
+      {
+        "index": 23,
+        "pred": "SELECT T1.Stadium_ID ,  COUNT(T2.concert_ID) FROM stadium AS T1 JOIN singer_in_concert AS T2 ON T1.Stadium_ID  =  T2.stadium_id GROUP BY T1.Stadium_ID",
+        "gold": "SELECT T2.name ,  count(*) FROM concert AS T1 JOIN stadium AS T2 ON T1.stadium_id  =  T2.stadium_id GROUP BY T1.stadium_id",
+        "differs": []
+      },
+      {
+        "index": 28,
+        "pred": "SELECT name FROM stadium EXCEPT SELECT stadium_name FROM concert",
+        "gold": "SELECT name FROM stadium WHERE stadium_id NOT IN (SELECT stadium_id FROM concert)",
+        "differs": []
+      }
+    ],
+    "no_such_table": [
+      {
+        "index": 53,
+        "pred": "SELECT COUNT(T1.PetID) FROM Has_Pet AS T1 INNER JOIN Students AS T2 ON T1.StuID  =  T2.StuID WHERE T2.Sex  =  \"F\" AND T1.PetID IN (SELECT PetID FROM Pets WHERE ",
+        "gold": "SELECT count(*) FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid JOIN pets AS T3 ON T2.petid  =  T3.petid WHERE T1.sex  =  'F' AND T3.pettype  =  ",
+        "differs": []
+      },
+      {
+        "index": 54,
+        "pred": "SELECT COUNT(T1.PetID) FROM Has_Pet AS T1 INNER JOIN Students AS T2 ON T1.StuID  =  T2.StuID WHERE T2.Sex  =  'F' AND T1.PetID IN (SELECT PetID FROM Pets WHERE ",
+        "gold": "SELECT count(*) FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid JOIN pets AS T3 ON T2.petid  =  T3.petid WHERE T1.sex  =  'F' AND T3.pettype  =  ",
+        "differs": []
+      },
+      {
+        "index": 57,
+        "pred": "SELECT T1.fname FROM Students AS T1 JOIN Has_Pet AS T2 ON T1.stuid  =  T2.stuid JOIN Pets AS T3 ON T2.petid  =  T3.petid WHERE T3.pettype  =  \"cat\" OR T3.pettyp",
+        "gold": "SELECT DISTINCT T1.Fname FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid JOIN pets AS T3 ON T3.petid  =  T2.petid WHERE T3.pettype  =  'cat' OR T",
+        "differs": []
+      }
+    ],
+    "filter": [
+      {
+        "index": 154,
+        "pred": "SELECT DISTINCT YEAR FROM cars_data WHERE weight < 4000 INTERSECT SELECT DISTINCT YEAR FROM cars_data WHERE weight > 3000",
+        "gold": "select distinct year from cars_data where weight between 3000 and 4000;",
+        "differs": [
+          "filter"
+        ]
+      },
+      {
+        "index": 180,
+        "pred": "SELECT Country FROM airlines WHERE Airline = 1",
+        "gold": "SELECT Country FROM AIRLINES WHERE Airline  =  \"JetBlue Airways\"",
+        "differs": [
+          "filter"
+        ]
+      },
+      {
+        "index": 387,
+        "pred": "SELECT name FROM teacher WHERE hometown != 'Little Lever Urban District'",
+        "gold": "select name from teacher where hometown != \"little lever urban district\"",
+        "differs": [
+          "filter"
+        ]
+      }
+    ],
+    "operational": [
+      {
+        "index": 177,
+        "pred": "SELECT T1.CountryId ,  T1.CountryName FROM countries AS T1 JOIN car_makers AS T2 ON T1.CountryId  =  T2.Country WHERE T2.Maker  =  \"Fiat\" OR COUNT(T2.Id)  >  3",
+        "gold": "SELECT T1.countryId ,  T1.CountryName FROM Countries AS T1 JOIN CAR_MAKERS AS T2 ON T1.CountryId  =  T2.Country GROUP BY T1.countryId HAVING count(*)  >  3 UNIO",
+        "differs": []
+      },
+      {
+        "index": 226,
+        "pred": "SELECT AirportCode FROM airports ORDER BY COUNT(*) DESC LIMIT 1",
+        "gold": "SELECT T1.AirportCode FROM AIRPORTS AS T1 JOIN FLIGHTS AS T2 ON T1.AirportCode  =  T2.DestAirport OR T1.AirportCode  =  T2.SourceAirport GROUP BY T1.AirportCode",
+        "differs": []
+      },
+      {
+        "index": 227,
+        "pred": "SELECT AirportCode FROM airports ORDER BY COUNT(*) ASC LIMIT 1",
+        "gold": "SELECT T1.AirportCode FROM AIRPORTS AS T1 JOIN FLIGHTS AS T2 ON T1.AirportCode  =  T2.DestAirport OR T1.AirportCode  =  T2.SourceAirport GROUP BY T1.AirportCode",
+        "differs": []
+      }
+    ],
+    "join_condition": [
+      {
+        "index": 229,
+        "pred": "SELECT T1.Airline FROM flights AS T1 JOIN airlines AS T2 ON T1.Airline  =  T2.uid GROUP BY T1.Airline ORDER BY COUNT(*) DESC LIMIT 1",
+        "gold": "SELECT T1.Airline FROM AIRLINES AS T1 JOIN FLIGHTS AS T2 ON T1.uid  =  T2.Airline GROUP BY T1.Airline ORDER BY count(*) DESC LIMIT 1",
+        "differs": [
+          "join_condition"
+        ]
+      },
+      {
+        "index": 230,
+        "pred": "SELECT T1.Airline FROM flights AS T1 JOIN airlines AS T2 ON T1.Airline  =  T2.uid GROUP BY T1.Airline ORDER BY COUNT(*) DESC LIMIT 1",
+        "gold": "SELECT T1.Airline FROM AIRLINES AS T1 JOIN FLIGHTS AS T2 ON T1.uid  =  T2.Airline GROUP BY T1.Airline ORDER BY count(*) DESC LIMIT 1",
+        "differs": [
+          "join_condition"
+        ]
+      },
+      {
+        "index": 900,
+        "pred": "SELECT T1.name FROM Highschooler AS T1 JOIN Friend AS T2 ON T1.ID  =  T2.student_id JOIN Likes AS T3 ON T2.friend_id  =  T3.liked_id",
+        "gold": "SELECT T2.name FROM Friend AS T1 JOIN Highschooler AS T2 ON T1.student_id  =  T2.id INTERSECT SELECT T2.name FROM Likes AS T1 JOIN Highschooler AS T2 ON T1.like",
+        "differs": [
+          "join_condition"
+        ]
+      }
+    ],
+    "tables": [
+      {
+        "index": 305,
+        "pred": "SELECT COUNT(DISTINCT template_type_code) FROM templates",
+        "gold": "SELECT count(DISTINCT template_id) FROM Documents",
+        "differs": [
+          "tables"
+        ]
+      },
+      {
+        "index": 306,
+        "pred": "SELECT COUNT(DISTINCT template_type_code) FROM templates",
+        "gold": "SELECT count(DISTINCT template_id) FROM Documents",
+        "differs": [
+          "tables"
+        ]
+      },
+      {
+        "index": 316,
+        "pred": "SELECT template_id FROM templates EXCEPT SELECT document_id FROM paragraphs",
+        "gold": "SELECT template_id FROM Templates EXCEPT SELECT template_id FROM Documents",
+        "differs": [
+          "tables"
+        ]
+      }
+    ],
+    "ambiguous_column": [
+      {
+        "index": 369,
+        "pred": "SELECT document_id ,  document_name ,  count(*) FROM documents AS T1 JOIN paragraphs AS T2 ON T1.document_id  =  T2.document_id GROUP BY document_id",
+        "gold": "SELECT T1.document_id ,  T2.document_name ,  count(*) FROM Paragraphs AS T1 JOIN Documents AS T2 ON T1.document_id  =  T2.document_id GROUP BY T1.document_id",
+        "differs": []
+      },
+      {
+        "index": 772,
+        "pred": "SELECT T1.name FROM country AS T1 JOIN country AS T2 ON T1.code  =  T2.continent WHERE T1.surfacearea  >  (SELECT max(surfacearea) FROM country AS T1 JOIN count",
+        "gold": "SELECT Name FROM country WHERE SurfaceArea  >  (SELECT min(SurfaceArea) FROM country WHERE Continent  =  \"Europe\")",
+        "differs": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,274 @@
+{
+  "cell": "C",
+  "dataset": "spider",
+  "n": 1034,
+  "scored": 1032,
+  "accuracy": 0.6977,
+  "accuracy_ci95": [
+    0.6686,
+    0.7258
+  ],
+  "exact_match": 0.4167,
+  "exec_valid_rate": 0.9641,
+  "pred_errors": {
+    "no_such_column": 34,
+    "no_such_table": 2,
+    "operational": 1
+  },
+  "by_difficulty": {},
+  "failure_taxonomy": {
+    "multiple_clauses": 167,
+    "semantic_mismatch": 59,
+    "no_such_column": 34,
+    "filter": 20,
+    "group_by": 12,
+    "ordering": 8,
+    "tables": 4,
+    "agg": 3,
+    "join_condition": 2,
+    "no_such_table": 2,
+    "operational": 1
+  },
+  "taxonomy_examples": {
+    "semantic_mismatch": [
+      {
+        "index": 2,
+        "pred": "SELECT name ,  country ,  age FROM singer ORDER BY age DESC",
+        "gold": "SELECT name ,  country ,  age FROM singer ORDER BY age DESC",
+        "differs": []
+      },
+      {
+        "index": 3,
+        "pred": "SELECT name ,  country ,  age FROM singer ORDER BY age DESC",
+        "gold": "SELECT name ,  country ,  age FROM singer ORDER BY age DESC",
+        "differs": []
+      },
+      {
+        "index": 7,
+        "pred": "SELECT name ,  song_release_year FROM singer ORDER BY age LIMIT 1",
+        "gold": "SELECT song_name ,  song_release_year FROM singer ORDER BY age LIMIT 1",
+        "differs": []
+      }
+    ],
+    "multiple_clauses": [
+      {
+        "index": 6,
+        "pred": "SELECT T1.song_name ,  T1.Song_release_year FROM singer AS T1 JOIN singer_in_concert AS T2 ON T1.singer_id  =  T2.singer_id ORDER BY T1.age LIMIT 1",
+        "gold": "SELECT song_name ,  song_release_year FROM singer ORDER BY age LIMIT 1",
+        "differs": [
+          "join_condition",
+          "ordering",
+          "tables"
+        ]
+      },
+      {
+        "index": 24,
+        "pred": "SELECT t1.name ,  t1.capacity FROM stadium AS t1 JOIN concert AS t2 ON t1.stadium_id  =  t2.stadium_id WHERE t2.year  >=  2014 GROUP BY t1.stadium_id ORDER BY c",
+        "gold": "SELECT T2.name ,  T2.capacity FROM concert AS T1 JOIN stadium AS T2 ON T1.stadium_id  =  T2.stadium_id WHERE T1.year  >=  2014 GROUP BY T2.stadium_id ORDER BY c",
+        "differs": [
+          "filter",
+          "group_by"
+        ]
+      },
+      {
+        "index": 25,
+        "pred": "SELECT t1.name ,  t1.capacity FROM stadium AS t1 JOIN concert AS t2 ON t1.stadium_id  =  t2.stadium_id WHERE t2.year  >  2013 GROUP BY t1.stadium_id ORDER BY co",
+        "gold": "select t2.name ,  t2.capacity from concert as t1 join stadium as t2 on t1.stadium_id  =  t2.stadium_id where t1.year  >  2013 group by t2.stadium_id order by co",
+        "differs": [
+          "filter",
+          "group_by"
+        ]
+      }
+    ],
+    "agg": [
+      {
+        "index": 16,
+        "pred": "SELECT max(capacity) ,  avg(Average) FROM stadium",
+        "gold": "select max(capacity), average from stadium",
+        "differs": [
+          "agg"
+        ]
+      },
+      {
+        "index": 496,
+        "pred": "SELECT sum(killed) ,  sum(injured) FROM death AS T1 JOIN ship AS T2 ON T1.caused_by_ship_id  =  T2.id WHERE T2.tonnage  =  't'",
+        "gold": "SELECT T1.killed ,  T1.injured FROM death AS T1 JOIN ship AS t2 ON T1.caused_by_ship_id  =  T2.id WHERE T2.tonnage  =  't'",
+        "differs": [
+          "agg"
+        ]
+      },
+      {
+        "index": 798,
+        "pred": "SELECT avg(LifeExpectancy) ,  Continent FROM country GROUP BY Continent HAVING avg(LifeExpectancy)  <  72",
+        "gold": "SELECT sum(Population) ,  avg(LifeExpectancy) ,  Continent FROM country GROUP BY Continent HAVING avg(LifeExpectancy)  <  72",
+        "differs": [
+          "agg"
+        ]
+      }
+    ],
+    "no_such_column": [
+      {
+        "index": 22,
+        "pred": "SELECT T2.name ,  count(*) FROM singer_in_concert AS T1 JOIN stadium AS T2 ON T1.stadium_id  =  T2.stadium_id GROUP BY T1.stadium_id",
+        "gold": "SELECT T2.name ,  count(*) FROM concert AS T1 JOIN stadium AS T2 ON T1.stadium_id  =  T2.stadium_id GROUP BY T1.stadium_id",
+        "differs": []
+      },
+      {
+        "index": 47,
+        "pred": "SELECT weight FROM pets WHERE pettype  =  'dog' AND age  =  (SELECT min(age) FROM pets WHERE pettype  =  'dog' )",
+        "gold": "SELECT weight FROM pets ORDER BY pet_age LIMIT 1",
+        "differs": []
+      },
+      {
+        "index": 67,
+        "pred": "SELECT pettype ,  weight FROM pets ORDER BY petage LIMIT 1",
+        "gold": "SELECT pettype ,  weight FROM pets ORDER BY pet_age LIMIT 1",
+        "differs": []
+      }
+    ],
+    "filter": [
+      {
+        "index": 111,
+        "pred": "SELECT T1.Accelerate FROM cars_data AS T1 JOIN car_names AS T2 ON T1.Id  =  T2.MakeId WHERE T2.Model  =  \"amc hornet sportabout (sw)\"",
+        "gold": "SELECT T1.Accelerate FROM CARS_DATA AS T1 JOIN CAR_NAMES AS T2 ON T1.Id  =  T2.MakeId WHERE T2.Make  =  'amc hornet sportabout (sw)';",
+        "differs": [
+          "filter"
+        ]
+      },
+      {
+        "index": 154,
+        "pred": "SELECT DISTINCT YEAR FROM cars_data WHERE weight  <  4000 INTERSECT SELECT DISTINCT YEAR FROM cars_data WHERE weight  >  3000",
+        "gold": "select distinct year from cars_data where weight between 3000 and 4000;",
+        "differs": [
+          "filter"
+        ]
+      },
+      {
+        "index": 361,
+        "pred": "SELECT Other_Details FROM Paragraphs WHERE Paragraph_text  =  'Korea '",
+        "gold": "select other_details from paragraphs where paragraph_text like 'korea'",
+        "differs": [
+          "filter"
+        ]
+      }
+    ],
+    "join_condition": [
+      {
+        "index": 174,
+        "pred": "SELECT countryname FROM countries EXCEPT SELECT t1.countryname FROM countries AS t1 JOIN car_makers AS t2 ON t1.Continent  =  t2.Country",
+        "gold": "SELECT CountryName FROM countries EXCEPT SELECT T1.CountryName FROM countries AS T1 JOIN CAR_MAKERS AS T2 ON T1.countryId  =  T2.Country;",
+        "differs": [
+          "join_condition"
+        ]
+      },
+      {
+        "index": 889,
+        "pred": "SELECT T2.name FROM friend AS T1 JOIN highschooler AS T2 ON T1.friend_id  =  T2.id GROUP BY T1.student_id HAVING count(*)  >=  3",
+        "gold": "SELECT T2.name FROM Friend AS T1 JOIN Highschooler AS T2 ON T1.student_id  =  T2.id GROUP BY T1.student_id HAVING count(*)  >=  3",
+        "differs": [
+          "join_condition"
+        ]
+      }
+    ],
+    "group_by": [
+      {
+        "index": 229,
+        "pred": "SELECT T1.Airline FROM airlines AS T1 JOIN flights AS T2 ON T1.uid  =  T2.Airline GROUP BY T2.Airline ORDER BY count(*) DESC LIMIT 1",
+        "gold": "SELECT T1.Airline FROM AIRLINES AS T1 JOIN FLIGHTS AS T2 ON T1.uid  =  T2.Airline GROUP BY T1.Airline ORDER BY count(*) DESC LIMIT 1",
+        "differs": [
+          "group_by"
+        ]
+      },
+      {
+        "index": 243,
+        "pred": "SELECT T1.Abbreviation FROM airlines AS T1 JOIN flights AS T2 ON T1.uid  =  T2.Airline GROUP BY T1.Abbreviation HAVING count(*)  <  200",
+        "gold": "SELECT T1.Airline FROM AIRLINES AS T1 JOIN FLIGHTS AS T2 ON T1.uid  =  T2.Airline GROUP BY T1.Airline HAVING count(*)  <  200",
+        "differs": [
+          "group_by"
+        ]
+      },
+      {
+        "index": 244,
+        "pred": "SELECT T1.Abbreviation FROM airlines AS T1 JOIN flights AS T2 ON T1.uid  =  T2.Airline GROUP BY T1.Abbreviation HAVING count(*)  <  200",
+        "gold": "SELECT T1.Airline FROM AIRLINES AS T1 JOIN FLIGHTS AS T2 ON T1.uid  =  T2.Airline GROUP BY T1.Airline HAVING count(*)  <  200",
+        "differs": [
+          "group_by"
+        ]
+      }
+    ],
+    "tables": [
+      {
+        "index": 306,
+        "pred": "SELECT count(DISTINCT template_type_code) FROM templates",
+        "gold": "SELECT count(DISTINCT template_id) FROM Documents",
+        "differs": [
+          "tables"
+        ]
+      },
+      {
+        "index": 571,
+        "pred": "SELECT count(*) ,  student_course_id FROM Student_Enrolment_Courses GROUP BY student_course_id ORDER BY count(*) DESC LIMIT 1",
+        "gold": "SELECT count(*) ,  student_course_id FROM Transcript_Contents GROUP BY student_course_id ORDER BY count(*) DESC LIMIT 1",
+        "differs": [
+          "tables"
+        ]
+      },
+      {
+        "index": 687,
+        "pred": "SELECT count(DISTINCT state) FROM VOTES",
+        "gold": "SELECT count(*) FROM area_code_state",
+        "differs": [
+          "tables"
+        ]
+      }
+    ],
+    "ordering": [
+      {
+        "index": 414,
+        "pred": "SELECT name ,  LEVEL_of_membership FROM visitor WHERE LEVEL_of_membership  >  4 ORDER BY age",
+        "gold": "SELECT name ,  Level_of_membership FROM visitor WHERE Level_of_membership  >  4 ORDER BY age DESC",
+        "differs": [
+          "ordering"
+        ]
+      },
+      {
+        "index": 453,
+        "pred": "SELECT first_name ,  country_code FROM players ORDER BY birth_date DESC LIMIT 1",
+        "gold": "SELECT first_name ,  country_code FROM players ORDER BY birth_date LIMIT 1",
+        "differs": [
+          "ordering"
+        ]
+      },
+      {
+        "index": 454,
+        "pred": "SELECT first_name ,  country_code FROM players ORDER BY birth_date DESC LIMIT 1",
+        "gold": "SELECT first_name ,  country_code FROM players ORDER BY birth_date LIMIT 1",
+        "differs": [
+          "ordering"
+        ]
+      }
+    ],
+    "no_such_table": [
+      {
+        "index": 611,
+        "pred": "SELECT t1.title FROM cartoon AS t1 JOIN channel AS t2 ON t1.channel  =  t2.id WHERE t2.series_name  =  'Sky Radio'",
+        "gold": "SELECT T2.Title FROM TV_Channel AS T1 JOIN Cartoon AS T2 ON T1.id = T2.Channel WHERE T1.series_name = \"Sky Radio\";",
+        "differs": []
+      },
+      {
+        "index": 612,
+        "pred": "SELECT t1.title FROM cartoon AS t1 JOIN channel AS t2 ON t1.channel  =  t2.id WHERE t2.series_name  =  'Sky Radio'",
+        "gold": "SELECT T2.Title FROM TV_Channel AS T1 JOIN Cartoon AS T2 ON T1.id = T2.Channel WHERE T1.series_name = \"Sky Radio\";",
+        "differs": []
+      }
+    ],
+    "operational": [
+      {
+        "index": 850,
+        "pred": "SELECT Major_Record_Format FROM orchestra ORDER BY COUNT(*) ASC",
+        "gold": "SELECT Major_Record_Format FROM orchestra GROUP BY Major_Record_Format ORDER BY COUNT(*) ASC",
+        "differs": []
+      }
+    ]
+  }
+}
