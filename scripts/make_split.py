@@ -19,7 +19,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
 VAL_N = 700
+ 
+ 
 SEED = 13
+ 
+ 
+def norm_sql(sql: str) -> str:
+    """Case/whitespace-folded SQL, for leak detection across splits."""
+    return " ".join(sql.split()).rstrip(";").strip().lower()
 
 
 def stratified_val_indices(items: list[dict], val_n: int = VAL_N,
@@ -83,17 +90,50 @@ def canonical_val_indices(items: list[dict], val_n: int = VAL_N,
     order = list(range(len(items)))
     rng.shuffle(order)
     return set(order[:val_n])
+ 
+def holdout_db_indices(items: list[dict], n_dbs: int,
+                       seed: int = SEED) -> set[int]:
+    """Indices belonging to ``n_dbs`` whole databases, removed from training.
+
+    A validation split drawn from databases the model trained on cannot
+    measure generalization: every one of those schemas is already memorized.
+    The locked Spider and BIRD dev sets both consist entirely of unseen
+    databases, so tuning has to happen on unseen databases too. Databases are
+    chosen by seeded shuffle (reproducible) and taken whole, so no question
+    from a held-out database can reach the training set.
+    """
+    rng = random.Random(seed)
+    dbs = sorted({x["db_id"] for x in items})
+    chosen = set(rng.sample(dbs, min(n_dbs, len(dbs))))
+    return {i for i, x in enumerate(items) if x["db_id"] in chosen}
+
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--stratify", action="store_true",
                     help="v2: proportional per-db val carve (changes membership)")
+    ap.add_argument("--holdout-dbs", type=int, default=0,
+                    help="also carve these whole databases out of training "
+                        "into holdout.json, so tuning can be measured on "
+                        "unseen schemas like the locked benchmarks")
     args = ap.parse_args()
     items = json.loads((DATA / "spider" / "train_spider.json").read_text())
     val_idx = (stratified_val_indices(items) if args.stratify
                else canonical_val_indices(items))
-    train = [x for i, x in enumerate(items) if i not in val_idx]
+    hold_idx: set[int] = set()
+    if args.holdout_dbs > 0:
+        # Carved from the non-val pool so no holdout question is also a val
+        # question. The stratified val carve still takes a quota from every
+        # database, so holdout databases do appear in val; that is harmless
+        # because val drives the eval-loss diagnostic, while the guarantee
+        # that matters for tuning is that no holdout database is trained on.
+        free = [i for i in range(len(items)) if i not in val_idx]
+        local = {j: i for j, i in enumerate(free)}
+        picked = holdout_db_indices([items[i] for i in free], args.holdout_dbs)
+        hold_idx = {local[j] for j in picked}
+
+    train = [x for i, x in enumerate(items) if i not in val_idx | hold_idx]
     val = [x for i, x in enumerate(items) if i in val_idx]
     out = DATA / "splits"
     out.mkdir(exist_ok=True)
@@ -102,6 +142,22 @@ def main() -> None:
     print(f"train={len(train)} val={len(val)} seed={SEED} "
           f"({'stratified by db_id' if args.stratify else 'canonical'} , "
           f"{len({x['db_id'] for x in val})} dbs in val)")
+    if hold_idx:
+        hold = [x for i, x in enumerate(items) if i in hold_idx]
+        (out / "holdout.json").write_text(json.dumps(hold))
+        # Assert the properties the probe depends on rather than reporting a
+        # weaker one: no holdout database is trainable, and no holdout gold
+        # query appears verbatim in the training set.
+        train_dbs = {x["db_id"] for x in train}
+        overlap = train_dbs & {x["db_id"] for x in hold}
+        assert not overlap, f"holdout databases leaked into training: {overlap}"
+        train_sql = {(x["db_id"], norm_sql(x["query"])) for x in train}
+        leaked = [x for x in hold
+                  if (x["db_id"], norm_sql(x["query"])) in train_sql]
+        assert not leaked, (f"{len(leaked)} holdout gold queries also occur "
+                            f"in training, e.g. {leaked[:1]}")
+        print(f"holdout={len(hold)} over {len({x['db_id'] for x in hold})} "
+              f"databases; 0 databases and 0 gold queries shared with train")
 
 
 if __name__ == "__main__":

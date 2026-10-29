@@ -14,7 +14,7 @@ import time
 from pathlib import Path
 
 from t2sql.inference.engine import LLM, extract_sql
-from t2sql.prompts.schema import schema_text
+from t2sql.prompts.schema import SchemaCache
 from t2sql.prompts.template import build_dialogue_messages
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,6 +26,8 @@ def main() -> None:
     ap.add_argument("--n", type=int, default=0, help="0 = all turns")
     ap.add_argument("--max-new-tokens", type=int, default=512)
     ap.add_argument("--adapter", default=None)
+    ap.add_argument("--question-values", action="store_true",
+                    help="pick schema example values that match the question")
     ap.add_argument("--schema-samples", action="store_true",
                     help="append row counts + example values to the schema")
     ap.add_argument("--out", required=True)
@@ -36,18 +38,19 @@ def main() -> None:
         rows = rows[:args.n]
 
     llm = LLM(args.model, adapter=args.adapter)
-    schema_cache: dict[str, str] = {}
+    schema_cache = SchemaCache(samples=args.schema_samples,
+                               question_values=args.question_values)
     out_path = Path(args.out).resolve()
     t_start = time.time()
 
     with out_path.open("w") as fh:
         for pos, row in enumerate(rows, 1):
             db_id = row["db_id"]
-            if db_id not in schema_cache:
-                db_file = ROOT / "data" / "spider" / "database" / db_id / f"{db_id}.sqlite"
-                schema_cache[db_id] = schema_text(db_file, samples=args.schema_samples)
+            db_file = ROOT / "data" / "spider" / "database" / db_id / f"{db_id}.sqlite"
             messages = build_dialogue_messages(
-                row["question"], schema_cache[db_id], row["history"])
+                row["question"],
+                schema_cache.get(db_file, row["question"]),
+                row["history"])
             pred = extract_sql(llm.generate(messages, max_new_tokens=args.max_new_tokens))
             fh.write(json.dumps({
                 "index": row["index"], "db_id": db_id,

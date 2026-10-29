@@ -15,6 +15,35 @@ _TABLE = re.compile(r"\b(?:FROM|JOIN)\s+([A-Za-z_][A-Za-z0-9_]*)", re.IGNORECASE
 _COUNT_HINT = re.compile(r"\bhow many\b|\bnumber of\b|\bcount\b|\btotal\b", re.IGNORECASE)
 _VALUE_HINT = re.compile(r"'([^']{2,})'")
 
+ 
+def pool_signature_counts(signatures) -> dict[str, int]:
+    """Tally executed-result signatures across a candidate pool.
+
+    Only successful executions contribute a signature, so failed candidates
+    raise the denominator without supporting any answer.
+    """
+    counts: dict[str, int] = {}
+    for sig in signatures:
+        if sig:
+            counts[sig] = counts.get(sig, 0) + 1
+    return counts
+
+ 
+def pool_consistency(sig: str | None, sig_counts: dict[str, int], pool_size: int) -> float:
+    """Self-consistency of one candidate against the sampled pool.
+
+    One definition shared by every cell that scores a candidate against a pool
+    (verifier selection and repair), because the feature is compared across
+    cells: a repair acceptance gate that subtracts a margin between a
+    pool-derived score and a freshly scored candidate is only meaningful if
+    both use the same denominator. ``pool_size`` is the number of candidates
+    sampled for the question, identical for every candidate in the pool,
+    including one produced later by repair.
+    """
+    if not sig or pool_size <= 0:
+        return 0.0
+    return sig_counts.get(sig, 0) / pool_size
+
 
 def result_signature(columns, rows) -> str:
     """Order-insensitive signature of an executed result (gold-free)."""

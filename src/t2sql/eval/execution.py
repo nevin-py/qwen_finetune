@@ -33,7 +33,10 @@ def postprocess(query: str) -> str:
 
 def remove_distinct(sql: str) -> str:
     """Identical to the official implementation (sqlparse token filter)."""
-    toks = [t.value for t in sqlparse.parse(sql)[0].flatten()]
+    parsed = sqlparse.parse(sql)
+    if not parsed:
+        return sql
+    toks = [t.value for t in parsed[0].flatten()]
     return "".join(t for t in toks if t.lower() != "distinct")
 
 

@@ -79,7 +79,12 @@ class Sandbox:
             raise FileNotFoundError(path)
         self.timeout_s = timeout_s
         self.max_rows = max_rows
+        # text_factory mirrors the official evaluator's connection setup
+        # (test-suite-sql-eval/exec_subprocess.py): without it a single
+        # non-UTF-8 text value makes the whole query raise, which silently
+        # removes otherwise-scorable questions from the split.
         self._con = sqlite3.connect(f"file:{path.resolve()}?mode=ro", uri=True)
+        self._con.text_factory = lambda b: b.decode(errors="ignore")
         self._con.execute("PRAGMA query_only = ON")
         self._con.set_authorizer(self._authorize)
 

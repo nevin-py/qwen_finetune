@@ -32,9 +32,20 @@ def best_acc(run_dir: Path) -> float | None:
 
 
 def write_summary(out: Path, rows: list[tuple[str, float | None]]) -> None:
+    """Rank every run directory on disk, not just this invocation's grid.
+
+    Sweeps are run in batches (epochs x lr, then extra seeds), so a summary
+    rebuilt from the current batch alone silently erased the earlier results:
+    the grid rows vanished the moment a seed-only run finished.
+    """
+    merged: dict[str, float | None] = {r[0]: r[1] for r in rows}
+    for run_dir in sorted(out.iterdir()):
+        if run_dir.is_dir():
+            merged.setdefault(run_dir.name, best_acc(run_dir))
     lines = ["# Sweep summary", "",
              "| run | best val_exec_acc |", "|---|---|"]
-    for tag, acc in sorted(rows, key=lambda r: (r[1] is None, -(r[1] or 0))):
+    for tag, acc in sorted(merged.items(),
+                           key=lambda r: (r[1] is None, -(r[1] or 0))):
         lines.append(f"| {tag} | {acc if acc is not None else 'n/a'} |")
     (out / "summary.md").write_text("\n".join(lines) + "\n")
 

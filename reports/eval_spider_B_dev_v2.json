@@ -1,9 +1,9 @@
 {
   "n": 1034,
-  "scored": 1032,
-  "skipped": 2,
-  "accuracy": 0.6676,
-  "exact_match": 0.4118,
+  "scored": 1034,
+  "skipped": 0,
+  "accuracy": 0.6663,
+  "exact_match": 0.413,
   "by_difficulty": {},
   "pred_errors": {
     "no_such_column": 86,

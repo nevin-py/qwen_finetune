@@ -84,18 +84,18 @@ def test_dedup_drops_duplicates_and_val_overlap():
         {"db_id": "b", "question": "Three?", "query": "SELECT 4"},
     ]
     val_keys = {("b", "two?")}
-    kept, n_dup, n_val = dedup(items, val_keys)
-    assert (n_dup, n_val) == (1, 1)
+    kept, n_dup, n_val, n_excluded = dedup(items, val_keys)
+    assert (n_dup, n_val, n_excluded) == (1, 1, 0)
     assert [x["question"] for x in kept] == ["One?", "Three?"]
 
 
 def test_fewshot_block_is_deterministic():
-    from scripts.build_training_set import build_fewshot_block
+    from scripts.build_training_set import few_shot_examples
 
     items = [{"question": f"q{i}", "query": f"SELECT {i}"} for i in range(30)]
-    a = build_fewshot_block(items, 2)
-    b = build_fewshot_block(items, 2)
-    assert a == b and a.startswith("Q: ") and "\nA: " in a
+    a = few_shot_examples(items, 2)
+    b = few_shot_examples(items, 2)
+    assert a == b and len(a) == 2
 
 
 def test_training_examples_honor_variants_and_fewshot():

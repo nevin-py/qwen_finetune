@@ -16,7 +16,7 @@ import torch
 
 from t2sql.datasets import db_file, dataset_items, sample_indices
 from t2sql.inference.engine import LLM, extract_sql
-from t2sql.prompts.schema import schema_text
+from t2sql.prompts.schema import SchemaCache
 from t2sql.prompts.template import build_messages, full_question, variant_for
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,7 +25,8 @@ ROOT = Path(__file__).resolve().parents[1]
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--model", default="Qwen/Qwen2.5-Coder-1.5B-Instruct")
-    ap.add_argument("--split", default="val", choices=["val", "train", "dev"])
+    ap.add_argument("--split", default="val",
+                    choices=["val", "holdout", "train", "dev"])
     ap.add_argument("--dataset", default="spider", choices=["spider", "bird"])
     ap.add_argument("--n", type=int, default=20)
     ap.add_argument("--seed", type=int, default=0)
@@ -34,6 +35,9 @@ def main() -> None:
                     help="instruction variants in play (1 = original text)")
     ap.add_argument("--few-shot-file", default=None,
                     help="text file with the few-shot block (0 = none)")
+    ap.add_argument("--question-values", action="store_true",
+                    help="pick schema example values that match the question "
+                         "instead of the first values alphabetically")
     ap.add_argument("--schema-samples", action="store_true",
                     help="append row counts + example values to the schema")
     ap.add_argument("--fp16", action="store_true",
@@ -50,17 +54,18 @@ def main() -> None:
     out_path = Path(args.out).resolve() if args.out else \
         ROOT / "reports" / f"baseline_{args.split}_n{len(sample)}.jsonl"
     llm = LLM(args.model, quantize=not args.fp16, adapter=args.adapter)
-    schema_cache: dict[str, str] = {}
+    schema_cache = SchemaCache(samples=args.schema_samples,
+                               question_values=args.question_values)
     few_shot = Path(args.few_shot_file).read_text() if args.few_shot_file else ""
     t_start = time.time()
     with out_path.open("w") as fh:
         for i, (index, item) in enumerate(sample):
             db_id = item["db_id"]
-            if db_id not in schema_cache:
-                schema_cache[db_id] = schema_text(
-                    db_file(args.dataset, db_id), samples=args.schema_samples)
             messages = build_messages(
-                full_question(item), schema_cache[db_id], few_shot=few_shot,
+                full_question(item),
+                schema_cache.get(db_file(args.dataset, db_id),
+                                 full_question(item)),
+                few_shot=few_shot,
                 variant=variant_for(item["question"], args.prompt_variants))
             pred = extract_sql(llm.generate(messages, max_new_tokens=args.max_new_tokens))
             # no gold in the output file: eval joins on index and verifies the pair

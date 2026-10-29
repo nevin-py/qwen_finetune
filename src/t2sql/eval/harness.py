@@ -14,7 +14,9 @@ from pathlib import Path
 from ..sandbox.executor import Sandbox
 from . import execution
 
-EVAL_TIMEOUT_S = 30.0   # matches official TIMEOUT=60 with headroom on this GPU box
+EVAL_TIMEOUT_S = 60.0   # must match the official evaluator's TIMEOUT; a
+                       # stricter deadline drops questions the official
+                       # harness would still score, shrinking the split.
 EVAL_MAX_ROWS = 200_000
 
 
